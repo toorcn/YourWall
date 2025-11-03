@@ -18,6 +18,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const handleMessageClick = (message: Message) => {
     setSelectedMessage(message);
@@ -29,9 +30,35 @@ export default function Home() {
     setTimeout(() => setSelectedMessage(null), 300);
   };
 
+  // Check if user has submitted a message
+  useEffect(() => {
+    const checkSubmissionStatus = () => {
+      const hasSubmittedMessage = localStorage.getItem('hasSubmittedMessage') === 'true';
+      setHasSubmitted(hasSubmittedMessage);
+    };
+
+    checkSubmissionStatus();
+
+    // Listen for message submission events
+    const handleMessageSubmitted = () => {
+      setHasSubmitted(true);
+    };
+
+    window.addEventListener('messageSubmitted', handleMessageSubmitted);
+    
+    return () => {
+      window.removeEventListener('messageSubmitted', handleMessageSubmitted);
+    };
+  }, []);
+
   useEffect(() => {
     // Initialize popular groups
     initializePopularGroups();
+
+    // Get the display name for filtering (messages store display names in the 'to' array)
+    const filterValue = selectedFilter === 'all' 
+      ? undefined 
+      : groups.find((g) => g.id === selectedFilter)?.displayName || selectedFilter;
 
     // Subscribe to messages
     const unsubscribeMessages = subscribeToMessages(
@@ -39,7 +66,7 @@ export default function Home() {
         setMessages(newMessages);
         setIsLoading(false);
       },
-      selectedFilter === 'all' ? undefined : selectedFilter
+      filterValue
     );
 
     // Subscribe to groups
@@ -138,8 +165,8 @@ export default function Home() {
           <MessageComposer availableGroups={availableGroups} />
         </div>
 
-        {/* Filter Bar */}
-        {groups.length > 0 && (
+        {/* Filter Bar - Only show if user has submitted */}
+        {hasSubmitted && groups.length > 0 && (
           <FilterBar
             groups={groups}
             selectedFilter={selectedFilter}
@@ -147,8 +174,49 @@ export default function Home() {
           />
         )}
 
-        {/* Messages Grid */}
-        {isLoading ? (
+        {/* Messages Grid or Prompt */}
+        {!hasSubmitted ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-center py-16 px-6"
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="inline-block mb-6"
+            >
+              <Mail className="w-24 h-24 text-purple-300" />
+            </motion.div>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              Share Your Thoughts First! 💌
+            </h2>
+            <p className="text-lg text-gray-600 mb-2 max-w-2xl mx-auto">
+              To see what others have written, you need to contribute to the message wall first.
+            </p>
+            <p className="text-md text-gray-500 max-w-2xl mx-auto">
+              Write a message above to unlock the full wall of messages from our community!
+            </p>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
+              className="mt-8 inline-flex items-center gap-2 text-purple-500 font-medium"
+            >
+              <Sparkles className="w-5 h-5" />
+              Let&apos;s get started!
+              <Sparkles className="w-5 h-5" />
+            </motion.div>
+          </motion.div>
+        ) : isLoading ? (
           <div className="text-center py-12">
             <motion.div
               animate={{ rotate: 360 }}

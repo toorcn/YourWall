@@ -108,7 +108,7 @@ export default function RecipientSelector({
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="flex items-center gap-1 px-3 py-1 rounded-full bg-linear-to-r from-purple-300/25 to-pink-300/25 backdrop-blur-sm border border-white/40 text-sm"
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-300/25 to-pink-300/25 backdrop-blur-sm border border-white/40 text-sm"
           >
             <span>{recipient}</span>
             <button

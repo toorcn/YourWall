@@ -8,6 +8,7 @@ import { MessageFormData } from '@/lib/types';
 import RecipientSelector from './RecipientSelector';
 
 const MAX_CHARACTERS = 500;
+const MIN_CHARACTERS = 20;
 
 interface MessageComposerProps {
   availableGroups: string[];
@@ -56,13 +57,21 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.to.length === 0 || !formData.content.trim()) {
+    if (formData.to.length === 0 || !formData.content.trim() || formData.content.trim().length < MIN_CHARACTERS) {
       return;
     }
 
     setIsSubmitting(true);
     try {
       await addMessage(formData);
+      
+      // Mark that the user has submitted a message
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('hasSubmittedMessage', 'true');
+        // Trigger a storage event for the same page
+        window.dispatchEvent(new Event('messageSubmitted'));
+      }
+      
       setFormData({ from: '', to: [], content: '' });
       setShowSuccess(true);
       setCurrentStep(1);
@@ -82,7 +91,8 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
   };
 
   const charactersRemaining = MAX_CHARACTERS - formData.content.length;
-  const isValid = formData.to.length > 0 && formData.content.trim().length > 0 && charactersRemaining >= 0;
+  const contentLength = formData.content.trim().length;
+  const isValid = formData.to.length > 0 && contentLength >= MIN_CHARACTERS && charactersRemaining >= 0;
 
   return (
     <div ref={formRef} className="relative">
@@ -180,8 +190,17 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                       rows={5}
                       className="w-full px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500 resize-none"
                     />
-                    <div className={`text-sm mt-1 text-right ${charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}`}>
-                      {charactersRemaining} characters remaining
+                    <div className="flex justify-between items-center text-sm mt-1">
+                      <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-orange-500' : 'text-gray-500'}>
+                        {contentLength > 0 && contentLength < MIN_CHARACTERS 
+                          ? `${MIN_CHARACTERS - contentLength} more characters needed (min ${MIN_CHARACTERS})`
+                          : contentLength >= MIN_CHARACTERS 
+                          ? `✓ ${contentLength} characters`
+                          : `Minimum ${MIN_CHARACTERS} characters`}
+                      </div>
+                      <div className={charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}>
+                        {charactersRemaining} remaining
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -200,7 +219,7 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                     whileTap={isValid ? { scale: 0.98 } : {}}
                     className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
                       isValid
-                        ? 'bg-linear-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
+                        ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >

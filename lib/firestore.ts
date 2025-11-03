@@ -85,20 +85,31 @@ export const subscribeToMessages = (
   let q;
   
   if (filter && filter !== 'all') {
+    // When filtering, fetch without orderBy to avoid requiring a composite index
+    // We'll sort in memory instead
     q = query(
       collection(db, 'messages'),
-      where('to', 'array-contains', filter),
-      orderBy('timestamp', 'desc')
+      where('to', 'array-contains', filter)
     );
   } else {
     q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
   }
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
-    const messages: Message[] = snapshot.docs.map((doc) => ({
+    let messages: Message[] = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as Message[];
+    
+    // Sort by timestamp descending if we didn't use orderBy in the query
+    if (filter && filter !== 'all') {
+      messages.sort((a, b) => {
+        const aTime = a.timestamp?.toMillis() || 0;
+        const bTime = b.timestamp?.toMillis() || 0;
+        return bTime - aTime;
+      });
+    }
+    
     callback(messages);
   });
 

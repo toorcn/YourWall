@@ -74,7 +74,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
             {/* Shareable Card - Larger format optimized for sharing */}
             <div 
               ref={cardRef}
-              className="relative aspect-square bg-linear-to-br from-purple-50 via-pink-50 to-blue-50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+              className="relative aspect-square bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Background Pattern */}
               <div className="absolute inset-0">
@@ -124,7 +124,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
 
                   {/* Message Content */}
                   <div className="flex-1 flex items-center justify-center">
-                    <p className="text-gray-900 text-xl sm:text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap wrap-break-word text-center font-semibold">
+                    <p className="text-gray-900 text-xl sm:text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words text-center font-semibold">
                       "{message.content}"
                     </p>
                   </div>
@@ -132,7 +132,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
 
                 {/* Footer */}
                 <div className="mt-6 sm:mt-8 text-center">
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold bg-linear-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-1">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-1">
                     KiyokoCon 2025
                   </p>
                   <p className="text-sm sm:text-base text-gray-700 font-medium">Message Wall</p>
@@ -150,7 +150,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 whileTap={{ scale: 0.95 }}
                 onClick={handleDownload}
                 disabled={isDownloading}
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-linear-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download className="w-5 h-5" />
                 {isDownloading ? 'Downloading...' : 'Download Image'}
@@ -161,7 +161,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 transition={{ delay: 0.3 }}
                 className="text-white/80 text-xs sm:text-sm mt-3"
               >
-                Perfect for sharing on Instagram Stories or posts!
+                Share it with the world!
               </motion.p>
             </div>
           </motion.div>
