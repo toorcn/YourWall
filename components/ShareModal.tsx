@@ -33,6 +33,15 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
 
   if (!message) return null;
 
+  // Debug: Log message data
+  console.log('ShareModal message:', {
+    from: message.from,
+    to: message.to,
+    content: message.content,
+    imageUrl: message.imageUrl,
+    hasImage: !!message.imageUrl
+  });
+
   const handleDownload = async () => {
     if (!cardRef.current || isDownloading) return;
 
@@ -51,42 +60,161 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
       
       await new Promise(resolve => setTimeout(resolve, 300));
 
+      // Convert all external images to data URLs to avoid CORS issues
+      // This MUST complete before html2canvas runs, otherwise we get tainted canvas error
+      const images = cardRef.current.querySelectorAll('img');
+      const imagePromises = Array.from(images).map(async (img) => {
+        const htmlImg = img as HTMLImageElement;
+        
+        // Skip if already a data URL
+        if (htmlImg.src.startsWith('data:')) {
+          return Promise.resolve();
+        }
+        
+        try {
+          console.log('Converting image to data URL:', htmlImg.src);
+          
+          // Use our API proxy to fetch the image (bypasses CORS)
+          const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(htmlImg.src)}`;
+          
+          const response = await fetch(proxyUrl);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const blob = await response.blob();
+          
+          return new Promise<void>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const dataUrl = reader.result as string;
+              if (!dataUrl) {
+                reject(new Error('FileReader returned empty result'));
+                return;
+              }
+              htmlImg.setAttribute('data-original-src', htmlImg.src);
+              htmlImg.src = dataUrl;
+              console.log('Image converted to data URL via proxy');
+              resolve();
+            };
+            reader.onerror = () => {
+              reject(new Error('FileReader failed'));
+            };
+            reader.readAsDataURL(blob);
+          });
+        } catch (err) {
+          console.error('Failed to convert image to data URL:', err);
+          const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          throw new Error(`Failed to load image: ${errorMessage}`);
+        }
+      });
+      
+      // Wait for ALL images to be converted
+      await Promise.all(imagePromises);
+      
+      // Verify all images are now data URLs
+      const allImages = cardRef.current.querySelectorAll('img');
+      const nonDataUrlImages = Array.from(allImages).filter((img) => {
+        const htmlImg = img as HTMLImageElement;
+        return !htmlImg.src.startsWith('data:');
+      });
+      
+      if (nonDataUrlImages.length > 0) {
+        throw new Error(`${nonDataUrlImages.length} image(s) could not be converted to data URLs. Please check Firebase Storage CORS configuration.`);
+      }
+      
+      // Wait for images to render with new data URLs
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       // Capture the card element as a canvas with error handling
       let canvas;
       try {
         console.log('Starting html2canvas capture...');
         canvas = await html2canvas(cardRef.current, {
           scale: 2, // Higher quality
-          useCORS: false, // Disable CORS to avoid cross-origin issues
-          allowTaint: true, // Allow tainted canvas
-          backgroundColor: '#ffffff',
-          logging: true, // Enable logging to debug
+          useCORS: false, // All images are now data URLs, no CORS needed
+          allowTaint: false, // MUST be false - we've converted all images to data URLs
+          backgroundColor: '#ffffff', // White background for clean download
+          logging: false, // Disable logging to avoid console spam
           windowWidth: cardRef.current.scrollWidth,
           windowHeight: cardRef.current.scrollHeight,
           imageTimeout: 0, // Don't timeout
           removeContainer: true,
           foreignObjectRendering: false, // Disable foreign object for better compatibility
           onclone: (clonedDoc) => {
-            console.log('Cloning document...');
-            // Ensure the cloned element is visible and properly styled
-            const clonedCard = clonedDoc.querySelector('[data-card-content]') as HTMLElement;
-            if (clonedCard) {
-              clonedCard.style.transform = 'none';
-              clonedCard.style.opacity = '1';
-              console.log('Cloned card styled');
-            }
+            // Remove all external stylesheets that might contain oklab
+            const linkTags = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
+            linkTags.forEach((tag) => tag.remove());
+            
+            // Remove style tags with oklab
+            const styleTags = clonedDoc.querySelectorAll('style');
+            styleTags.forEach((tag) => {
+              if (tag.textContent && tag.textContent.includes('oklab')) {
+                tag.remove();
+              }
+            });
             
             // Remove backdrop-filter which can cause issues
-            const elementsWithBackdrop = clonedDoc.querySelectorAll('[style*="backdrop"]');
-            elementsWithBackdrop.forEach((el) => {
+            const allElements = clonedDoc.querySelectorAll('*');
+            allElements.forEach((el) => {
               const htmlEl = el as HTMLElement;
-              htmlEl.style.backdropFilter = 'none';
-              htmlEl.style.webkitBackdropFilter = 'none';
+              if (htmlEl.style.backdropFilter) {
+                htmlEl.style.backdropFilter = 'none';
+              }
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              if ((htmlEl.style as any).webkitBackdropFilter) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (htmlEl.style as any).webkitBackdropFilter = 'none';
+              }
             });
-            console.log('Removed backdrop filters from', elementsWithBackdrop.length, 'elements');
+            
+            // Remove white overlay divs that create yellow hue
+            // Find all divs with white/transparent backgrounds
+            const allDivs = clonedDoc.querySelectorAll('div');
+            allDivs.forEach((div) => {
+              const htmlDiv = div as HTMLElement;
+              const inlineBg = htmlDiv.style.backgroundColor || '';
+              const classes = htmlDiv.classList.toString();
+              
+              // Check if it's an overlay (positioned absolutely with inset-0 or has white bg)
+              const isOverlay = classes.includes('inset-0') || 
+                                htmlDiv.style.position === 'absolute' ||
+                                htmlDiv.style.position === 'fixed';
+              
+              // Remove white overlays with opacity that create yellow tint
+              if (inlineBg.includes('rgba(255, 255, 255') || 
+                  inlineBg.includes('rgb(255, 255, 255')) {
+                if (isOverlay) {
+                  // Remove the overlay completely
+                  htmlDiv.style.display = 'none';
+                } else {
+                  // For non-overlay divs, make background fully transparent
+                  htmlDiv.style.backgroundColor = 'transparent';
+                }
+              }
+              
+              // Also check for any white rgba backgrounds (with any opacity)
+              if (inlineBg.includes('rgba') && inlineBg.includes('255') && inlineBg.includes('255')) {
+                if (isOverlay) {
+                  htmlDiv.style.display = 'none';
+                } else {
+                  htmlDiv.style.backgroundColor = 'transparent';
+                }
+              }
+            });
+            
+            // Ensure images have no background color tint
+            const images = clonedDoc.querySelectorAll('img');
+            images.forEach((img) => {
+              const htmlImg = img as HTMLImageElement;
+              htmlImg.style.backgroundColor = 'transparent';
+              // Remove any filters that might add color cast
+              htmlImg.style.filter = 'none';
+            });
           },
         });
-        console.log('Canvas created successfully:', canvas);
+        console.log('Canvas created successfully');
       } catch (canvasError) {
         console.error('Canvas generation error details:', canvasError);
         throw canvasError; // Throw the actual error instead of a generic one
@@ -128,10 +256,36 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
         }
       });
 
+      // Restore original image sources
+      if (cardRef.current) {
+        const images = cardRef.current.querySelectorAll('img[data-original-src]');
+        images.forEach((img) => {
+          const htmlImg = img as HTMLImageElement;
+          const originalSrc = htmlImg.getAttribute('data-original-src');
+          if (originalSrc) {
+            htmlImg.src = originalSrc;
+            htmlImg.removeAttribute('data-original-src');
+          }
+        });
+      }
+
     } catch (error) {
       console.error('Error downloading image:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to download image. Please try again.';
       alert(errorMessage);
+      
+      // Restore original image sources even on error
+      if (cardRef.current) {
+        const images = cardRef.current.querySelectorAll('img[data-original-src]');
+        images.forEach((img) => {
+          const htmlImg = img as HTMLImageElement;
+          const originalSrc = htmlImg.getAttribute('data-original-src');
+          if (originalSrc) {
+            htmlImg.src = originalSrc;
+            htmlImg.removeAttribute('data-original-src');
+          }
+        });
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -251,7 +405,14 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                           src={message.imageUrl}
                           alt="Message attachment"
                           className="w-full h-auto object-contain bg-white/50"
-                          crossOrigin="anonymous"
+                          onError={(e) => {
+                            console.error('Image failed to load:', message.imageUrl);
+                            const img = e.target as HTMLImageElement;
+                            img.style.display = 'none';
+                          }}
+                          onLoad={() => {
+                            console.log('Image loaded successfully:', message.imageUrl);
+                          }}
                         />
                       </div>
                     )}
