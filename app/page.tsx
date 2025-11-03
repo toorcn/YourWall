@@ -1,65 +1,167 @@
-import Image from "next/image";
+'use client';
+
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import MessageComposer from '@/components/MessageComposer';
+import MessageCard from '@/components/MessageCard';
+import FilterBar from '@/components/FilterBar';
+import FloatingParticles from '@/components/FloatingParticles';
+import { subscribeToMessages, subscribeToGroups, initializePopularGroups } from '@/lib/firestore';
+import { Message, Group } from '@/lib/types';
 
 export default function Home() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Initialize popular groups
+    initializePopularGroups();
+
+    // Subscribe to messages
+    const unsubscribeMessages = subscribeToMessages(
+      (newMessages) => {
+        setMessages(newMessages);
+        setIsLoading(false);
+      },
+      selectedFilter === 'all' ? undefined : selectedFilter
+    );
+
+    // Subscribe to groups
+    const unsubscribeGroups = subscribeToGroups((newGroups) => {
+      setGroups(newGroups);
+    });
+
+    return () => {
+      unsubscribeMessages();
+      unsubscribeGroups();
+    };
+  }, [selectedFilter]);
+
+  const availableGroups = groups.map((g) => g.displayName);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Floating Particles */}
+      <FloatingParticles />
+      
+      {/* Animated Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100" />
+        
+        {/* Floating orbs */}
+        <motion.div
+          className="absolute top-20 left-20 w-64 h-64 bg-purple-300/30 rounded-full blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+        <motion.div
+          className="absolute top-40 right-20 w-96 h-96 bg-pink-300/30 rounded-full blur-3xl"
+          animate={{
+            x: [0, -30, 0],
+            y: [0, 50, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 left-1/3 w-80 h-80 bg-blue-300/30 rounded-full blur-3xl"
+          animate={{
+            x: [0, 40, 0],
+            y: [0, -40, 0],
+            scale: [1, 1.15, 1],
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+
+      {/* Main Content */}
+      <div className="relative max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-5xl sm:text-6xl font-serif font-bold mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent">
+            KiyokoCon 2025
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl text-gray-600 font-light">
+            Leave a message for our amazing community ✨
           </p>
+        </motion.div>
+
+        {/* Message Composer */}
+        <div className="mb-12 max-w-2xl mx-auto">
+          <MessageComposer availableGroups={availableGroups} />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+
+        {/* Filter Bar */}
+        {groups.length > 0 && (
+          <FilterBar
+            groups={groups}
+            selectedFilter={selectedFilter}
+            onFilterChange={setSelectedFilter}
+          />
+        )}
+
+        {/* Messages Grid */}
+        {isLoading ? (
+          <div className="text-center py-12">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="inline-block w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <p className="mt-4 text-gray-600">Loading messages...</p>
+          </div>
+        ) : messages.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <p className="text-gray-500 text-lg">
+              {selectedFilter === 'all'
+                ? 'No messages yet. Be the first to leave one! 💌'
+                : `No messages for ${groups.find((g) => g.id === selectedFilter)?.displayName || selectedFilter} yet.`}
+            </p>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {messages.map((message, index) => (
+              <MessageCard key={message.id} message={message} index={index} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <motion.footer
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="relative text-center py-8 text-gray-500 text-sm"
+      >
+        <p>Made with 💜 for KiyokoCon 2025</p>
+      </motion.footer>
     </div>
   );
 }
