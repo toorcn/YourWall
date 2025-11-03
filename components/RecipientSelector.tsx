@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users, Briefcase, UserCheck, PartyPopper, Globe, Lightbulb } from 'lucide-react';
+import { X, Users, Briefcase, PartyPopper, Globe, Lightbulb } from 'lucide-react';
 
 interface RecipientSelectorProps {
   selectedRecipients: string[];
@@ -13,7 +13,6 @@ interface RecipientSelectorProps {
 const QUICK_SELECT_GROUPS = [
   { name: 'Volunteers', icon: Users },
   { name: 'Committees', icon: Briefcase },
-  { name: 'Staff', icon: UserCheck },
   { name: 'Attendees', icon: PartyPopper },
   { name: 'Everyone', icon: Globe },
 ];
@@ -109,7 +108,7 @@ export default function RecipientSelector({
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-300/25 to-pink-300/25 backdrop-blur-sm border border-white/40 text-sm"
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-linear-to-r from-purple-300/25 to-pink-300/25 backdrop-blur-sm border border-white/40 text-sm"
           >
             <span>{recipient}</span>
             <button

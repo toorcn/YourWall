@@ -107,7 +107,7 @@ Each document contains:
 ```javascript
 {
   from: "John Doe",           // or "Anonymous"
-  to: ["Volunteers", "Staff"], // array of recipients
+  to: ["Volunteers", "Attendees"], // array of recipients
   content: "Thank you all!",   // message text
   timestamp: Timestamp,         // when created
   color: "#FFE4E1"             // pastel color

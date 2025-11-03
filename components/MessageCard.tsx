@@ -3,7 +3,9 @@
 import { motion } from 'framer-motion';
 import { Message } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { Share2 } from 'lucide-react';
+import { Share2, Heart } from 'lucide-react';
+import { likeMessage } from '@/lib/firestore';
+import { useState, useEffect } from 'react';
 
 interface MessageCardProps {
   message: Message;
@@ -11,10 +13,52 @@ interface MessageCardProps {
   onClick: () => void;
 }
 
+const LIKED_MESSAGES_KEY = 'kiyokocon_liked_messages';
+
+// Get liked messages from localStorage
+const getLikedMessages = (): Set<string> => {
+  if (typeof window === 'undefined') return new Set();
+  const stored = localStorage.getItem(LIKED_MESSAGES_KEY);
+  return stored ? new Set(JSON.parse(stored)) : new Set();
+};
+
+// Save a liked message to localStorage
+const saveLikedMessage = (messageId: string): void => {
+  if (typeof window === 'undefined') return;
+  const liked = getLikedMessages();
+  liked.add(messageId);
+  localStorage.setItem(LIKED_MESSAGES_KEY, JSON.stringify([...liked]));
+};
+
 export default function MessageCard({ message, index, onClick }: MessageCardProps) {
+  const [isLiking, setIsLiking] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
+  
   const formattedTime = message.timestamp
     ? formatDistanceToNow(message.timestamp.toDate(), { addSuffix: true })
     : 'just now';
+
+  // Check if this message has been liked on mount
+  useEffect(() => {
+    const likedMessages = getLikedMessages();
+    setHasLiked(likedMessages.has(message.id));
+  }, [message.id]);
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening share modal
+    if (isLiking || hasLiked) return; // Prevent multiple clicks or re-liking
+    
+    setIsLiking(true);
+    try {
+      await likeMessage(message.id);
+      saveLikedMessage(message.id);
+      setHasLiked(true);
+    } catch (error) {
+      console.error('Error liking message:', error);
+    } finally {
+      setTimeout(() => setIsLiking(false), 500); // Reset after animation
+    }
+  };
 
   return (
     <motion.div
@@ -66,6 +110,37 @@ export default function MessageCard({ message, index, onClick }: MessageCardProp
         <p className="text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
           {message.content}
         </p>
+
+        {/* Like Button */}
+        <div className="mt-4 flex items-center justify-end">
+          <motion.button
+            onClick={handleLike}
+            disabled={isLiking || hasLiked}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border transition-all duration-200 ${
+              hasLiked
+                ? 'bg-pink-100/80 border-pink-300 cursor-not-allowed opacity-100'
+                : 'bg-white/60 border-white/60 hover:bg-white/80 hover:border-pink-300 cursor-pointer disabled:opacity-50'
+            }`}
+            whileTap={hasLiked ? {} : { scale: 0.9 }}
+            title={hasLiked ? 'You already liked this message' : 'Like this message'}
+          >
+            <motion.div
+              animate={isLiking ? { scale: [1, 1.3, 1] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <Heart 
+                className={`w-4 h-4 transition-colors ${
+                  hasLiked || (message.likes || 0) > 0 
+                    ? 'text-pink-500 fill-pink-500' 
+                    : 'text-gray-500'
+                }`}
+              />
+            </motion.div>
+            <span className={`text-sm font-medium ${hasLiked ? 'text-pink-600' : 'text-gray-700'}`}>
+              {message.likes || 0}
+            </span>
+          </motion.button>
+        </div>
 
         {/* Decorative element on hover */}
         <div className="mt-4 h-0.5 bg-gradient-to-r from-purple-200/0 via-purple-200/40 to-purple-200/0 opacity-0 group-hover:opacity-100 transition-opacity" />

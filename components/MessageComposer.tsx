@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Send, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, CheckCircle, Sparkles, Heart, ArrowRight } from 'lucide-react';
 import { addMessage } from '@/lib/firestore';
 import { MessageFormData } from '@/lib/types';
 import RecipientSelector from './RecipientSelector';
@@ -21,6 +21,37 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1); // Start at step 1
+  const [step1Skipped, setStep1Skipped] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+  const stepRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+
+  // Auto-reveal next step when current step is completed
+  useEffect(() => {
+    if (showSuccess) return;
+
+    // Step 1 -> Step 2: when from field has value or is skipped
+    if (currentStep === 1 && (formData.from.trim() || step1Skipped)) {
+      const timer = setTimeout(() => setCurrentStep(2), 300);
+      return () => clearTimeout(timer);
+    }
+
+    // Step 2 -> Step 3: when recipients are selected
+    if (currentStep === 2 && formData.to.length > 0) {
+      const timer = setTimeout(() => setCurrentStep(3), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [formData.from, formData.to, step1Skipped, currentStep, showSuccess]);
+
+  // Auto-scroll to the current field
+  useEffect(() => {
+    if (currentStep > 0 && currentStep <= 3 && stepRefs[currentStep - 1]?.current) {
+      stepRefs[currentStep - 1].current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [currentStep]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +65,11 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
       await addMessage(formData);
       setFormData({ from: '', to: [], content: '' });
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      setCurrentStep(1);
+      setStep1Skipped(false);
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 4000);
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
@@ -42,84 +77,224 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
     }
   };
 
+  const handleSkipStep1 = () => {
+    setStep1Skipped(true);
+  };
+
   const charactersRemaining = MAX_CHARACTERS - formData.content.length;
   const isValid = formData.to.length > 0 && formData.content.trim().length > 0 && charactersRemaining >= 0;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* From Field */}
-        <div>
-          <input
-            type="text"
-            value={formData.from}
-            onChange={(e) => setFormData({ ...formData, from: e.target.value })}
-            placeholder="From: (optional, leave blank for anonymous)"
-            className="w-full px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500"
-          />
-        </div>
+    <div ref={formRef} className="relative">
+      <AnimatePresence mode="wait">
+        {!showSuccess ? (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.3 }}
+          >
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* From Field */}
+              <AnimatePresence>
+                {currentStep >= 1 && (
+                  <motion.div
+                    ref={stepRefs[0]}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                  >
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Step 1: Who are you? (Optional)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={formData.from}
+                        onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                        placeholder="Your name, department, or stay anonymous"
+                        className="flex-1 px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500"
+                        autoFocus
+                        disabled={step1Skipped}
+                      />
+                      {!formData.from && !step1Skipped && currentStep === 1 && (
+                        <motion.button
+                          type="button"
+                          onClick={handleSkipStep1}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-4 py-3 rounded-2xl bg-white/40 backdrop-blur-md border border-white/40 hover:border-purple-300 transition-all text-gray-700 font-medium flex items-center gap-2"
+                        >
+                          Skip <ArrowRight className="w-4 h-4" />
+                        </motion.button>
+                      )}
+                    </div>
+                    {step1Skipped && (
+                      <p className="text-xs text-gray-500 mt-1 italic">Continuing as Anonymous</p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-        {/* To Field */}
-        <RecipientSelector
-          selectedRecipients={formData.to}
-          onRecipientsChange={(recipients) => setFormData({ ...formData, to: recipients })}
-          availableGroups={availableGroups}
-        />
+              {/* To Field */}
+              <AnimatePresence>
+                {currentStep >= 2 && (
+                  <motion.div
+                    ref={stepRefs[1]}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                  >
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Step 2: Who is this message for? *
+                    </label>
+                    <RecipientSelector
+                      selectedRecipients={formData.to}
+                      onRecipientsChange={(recipients) => setFormData({ ...formData, to: recipients })}
+                      availableGroups={availableGroups}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-        {/* Message Content */}
-        <div className="relative">
-          <textarea
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            placeholder="Write your message..."
-            rows={4}
-            className="w-full px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500 resize-none"
-          />
-          <div className={`text-sm mt-1 text-right ${charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}`}>
-            {charactersRemaining} characters remaining
-          </div>
-        </div>
+              {/* Message Content */}
+              <AnimatePresence>
+                {currentStep >= 3 && (
+                  <motion.div
+                    ref={stepRefs[2]}
+                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                    className="relative"
+                  >
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Step 3: Write your message *
+                    </label>
+                    <textarea
+                      value={formData.content}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      placeholder="Share your thoughts, appreciation, or encouragement..."
+                      rows={5}
+                      className="w-full px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500 resize-none"
+                    />
+                    <div className={`text-sm mt-1 text-right ${charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}`}>
+                      {charactersRemaining} characters remaining
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-        {/* Submit Button */}
-        <motion.button
-          type="submit"
-          disabled={!isValid || isSubmitting}
-          whileHover={isValid ? { scale: 1.02 } : {}}
-          whileTap={isValid ? { scale: 0.98 } : {}}
-          className={`w-full px-6 py-3 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
-            isValid
-              ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          {isSubmitting ? (
-            'Sending...'
-          ) : (
-            <>
-              <Send className="w-4 h-4" />
-              Send Message
-            </>
-          )}
-        </motion.button>
-      </form>
+              {/* Submit Button */}
+              <AnimatePresence>
+                {currentStep >= 3 && (
+                  <motion.button
+                    type="submit"
+                    disabled={!isValid || isSubmitting}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    whileHover={isValid ? { scale: 1.02 } : {}}
+                    whileTap={isValid ? { scale: 0.98 } : {}}
+                    className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
+                      isValid
+                        ? 'bg-linear-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        >
+                          <Sparkles className="w-5 h-5" />
+                        </motion.div>
+                        Sending your message...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5" />
+                        Send Message
+                      </>
+                    )}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </form>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: 'spring', damping: 15, stiffness: 100 }}
+            className="py-12 px-6 text-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', damping: 10, stiffness: 200, delay: 0.1 }}
+              className="mb-6 inline-block"
+            >
+              <div className="relative">
+                <CheckCircle className="w-20 h-20 text-green-500" />
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: [0, 1.5, 1], opacity: [0, 1, 0] }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="absolute inset-0 rounded-full bg-green-500/20"
+                />
+              </div>
+            </motion.div>
+            
+            <motion.h3
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-2xl font-bold text-gray-800 mb-2"
+            >
+              Message Sent!
+            </motion.h3>
+            
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-gray-600 mb-6"
+            >
+              Your message has been added to the wall
+            </motion.p>
 
-      {/* Success Message */}
-      {showSuccess && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          className="absolute -bottom-12 left-0 right-0 text-center text-green-600 font-medium flex items-center justify-center gap-2"
-        >
-          <CheckCircle className="w-5 h-5" />
-          Message sent successfully!
-        </motion.div>
-      )}
-    </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex justify-center gap-2"
+            >
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ y: 0 }}
+                  animate={{ y: [-10, 0, -10] }}
+                  transition={{ 
+                    duration: 1.5, 
+                    repeat: Infinity, 
+                    delay: i * 0.1,
+                    ease: 'easeInOut'
+                  }}
+                >
+                  <Heart className="w-6 h-6 text-pink-400 fill-pink-400" />
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 

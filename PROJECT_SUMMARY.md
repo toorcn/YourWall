@@ -15,7 +15,7 @@ A beautiful, dreamy message platform has been created for KiyokoCon 2025 attende
 - 500 character limit with live counter
 
 ✅ **Dynamic Group Management**
-- Pre-populated popular groups (Volunteers, Committees, Staff, Attendees, Everyone)
+- Pre-populated popular groups (Volunteers, Committees, Attendees, Everyone)
 - Users can create new groups on-the-fly
 - Auto-complete suggestions for existing groups
 - Filter messages by recipient group

@@ -7,6 +7,7 @@ export interface Message {
   content: string;
   timestamp: Timestamp;
   color?: string; // Optional color for visual variety
+  likes?: number; // Number of likes/hearts
 }
 
 export interface Group {

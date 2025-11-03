@@ -128,7 +128,7 @@ export default function Home() {
             KiyokoCon 2025
           </h1>
           <p className="text-xl text-gray-600 font-light flex items-center justify-center gap-2">
-            Leave a message for our amazing community
+            Leave a message for each other
             <Sparkles className="w-5 h-5 text-purple-500" />
           </p>
         </motion.div>

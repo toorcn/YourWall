@@ -147,7 +147,7 @@ service cloud.firestore {
 
 ## 🎯 Usage Tips
 
-1. **Pre-populated Groups**: The app automatically creates popular groups (Volunteers, Committees, Staff, Attendees, Everyone)
+1. **Pre-populated Groups**: The app automatically creates popular groups (Volunteers, Committees, Attendees, Everyone)
 2. **Create New Groups**: Just type a new group name when composing a message
 3. **Anonymous Messages**: Leave the "From" field blank to post anonymously
 4. **Character Limit**: Messages are limited to 500 characters for better readability

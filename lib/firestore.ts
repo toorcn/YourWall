@@ -16,7 +16,7 @@ import { db } from './firebase';
 import { Message, Group, MessageFormData } from './types';
 
 // Predefined popular groups
-const POPULAR_GROUPS = ['Volunteers', 'Committees', 'Staff', 'Attendees', 'Everyone'];
+const POPULAR_GROUPS = ['Volunteers', 'Committees', 'Attendees', 'Everyone'];
 
 // Pastel colors for message cards
 const MESSAGE_COLORS = [
@@ -43,6 +43,7 @@ export const addMessage = async (messageData: MessageFormData): Promise<void> =>
     content: messageData.content,
     timestamp: Timestamp.now(),
     color: getRandomColor(),
+    likes: 0,
   };
 
   await addDoc(collection(db, 'messages'), message);
@@ -66,6 +67,14 @@ export const addMessage = async (messageData: MessageFormData): Promise<void> =>
       });
     }
   }
+};
+
+// Like a message
+export const likeMessage = async (messageId: string): Promise<void> => {
+  const messageRef = doc(db, 'messages', messageId);
+  await updateDoc(messageRef, {
+    likes: increment(1),
+  });
 };
 
 // Subscribe to messages in real-time
