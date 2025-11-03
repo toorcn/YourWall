@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { Message } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { Share2, Heart } from 'lucide-react';
@@ -70,11 +71,22 @@ export default function MessageCard({ message, index, onClick }: MessageCardProp
       onClick={onClick}
     >
       <div
-        className="h-full p-6 rounded-3xl backdrop-blur-md border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300 relative"
+        className="h-full p-6 rounded-3xl backdrop-blur-md border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden"
         style={{
-          backgroundColor: message.color ? `${message.color}40` : 'rgba(255, 255, 255, 0.3)',
+          backgroundImage: 'url(/kiyokocon-card.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       >
+        {/* Overlay for text readability */}
+        <div 
+          className="absolute inset-0 rounded-3xl -z-10"
+          style={{
+            backgroundColor: message.color ? `${message.color}60` : 'rgba(255, 255, 255, 0.6)',
+            backdropFilter: 'blur(8px)',
+          }}
+        />
         {/* Share Icon Hint */}
         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
           <div className="p-2 rounded-full bg-white/60 backdrop-blur-sm">
@@ -110,6 +122,27 @@ export default function MessageCard({ message, index, onClick }: MessageCardProp
         <p className="text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
           {message.content}
         </p>
+
+        {/* Image Attachment */}
+        {message.imageUrl && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-4 rounded-2xl overflow-hidden border border-white/60 shadow-md relative"
+          >
+            <div className="relative w-full" style={{ minHeight: '200px' }}>
+              <Image
+                src={message.imageUrl}
+                alt="Message attachment"
+                width={600}
+                height={400}
+                className="w-full max-h-96 object-contain bg-white/50"
+                style={{ width: '100%', height: 'auto' }}
+              />
+            </div>
+          </motion.div>
+        )}
 
         {/* Like Button */}
         <div className="mt-4 flex items-center justify-end">

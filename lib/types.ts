@@ -8,6 +8,7 @@ export interface Message {
   timestamp: Timestamp;
   color?: string; // Optional color for visual variety
   likes?: number; // Number of likes/hearts
+  imageUrl?: string; // Optional image attachment
 }
 
 export interface Group {
@@ -21,5 +22,6 @@ export interface MessageFormData {
   from: string;
   to: string[];
   content: string;
+  imageFile?: File; // Optional image file to upload
 }
 

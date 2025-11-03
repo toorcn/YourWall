@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Message, Group, MessageFormData } from './types';
+import { uploadMessageImage, compressImage } from './storage';
 
 // Predefined popular groups
 const POPULAR_GROUPS = ['Volunteers', 'Committees', 'Attendees', 'Everyone'];
@@ -37,35 +38,75 @@ const getRandomColor = () => {
 
 // Add a new message
 export const addMessage = async (messageData: MessageFormData): Promise<void> => {
-  const message = {
-    from: messageData.from || 'Anonymous',
-    to: messageData.to,
-    content: messageData.content,
-    timestamp: Timestamp.now(),
-    color: getRandomColor(),
-    likes: 0,
-  };
+  let imageUrl: string | undefined;
 
-  await addDoc(collection(db, 'messages'), message);
-
-  // Update or create groups
-  for (const recipient of messageData.to) {
-    const groupId = recipient.toLowerCase();
-    const groupRef = doc(db, 'groups', groupId);
-    
+  // Upload image if provided
+  if (messageData.imageFile) {
     try {
-      await updateDoc(groupRef, {
-        messageCount: increment(1),
-      });
+      console.log('📤 Starting image upload process...');
+      console.log(`📊 Original file size: ${(messageData.imageFile.size / 1024).toFixed(0)}KB`);
+      
+      // Compress the image before uploading
+      const compressedImage = await compressImage(messageData.imageFile);
+      console.log(`📊 After compression: ${(compressedImage.size / 1024).toFixed(0)}KB`);
+      
+      // Upload (timeout is handled within uploadMessageImage)
+      console.log('☁️ Uploading to Firebase Storage...');
+      imageUrl = await uploadMessageImage(compressedImage);
+      console.log('✅ Image uploaded successfully!');
     } catch (error) {
-      // Group doesn't exist, create it
-      await setDoc(groupRef, {
-        id: groupId,
-        displayName: recipient,
-        createdAt: Timestamp.now(),
-        messageCount: 1,
-      });
+      console.error('❌ Error uploading image:', error);
+      
+      // Provide more specific error message
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          throw new Error('Image upload timed out. Please check your internet connection and try with a smaller image.');
+        } else if (error.message.includes('retry-limit-exceeded')) {
+          throw new Error('Upload failed after multiple retries. Please check your internet connection and try again.');
+        } else if (error.message.includes('Permission denied')) {
+          throw new Error('Upload failed: Permission denied. Please contact the administrator.');
+        }
+        throw error;
+      }
+      throw new Error('Failed to upload image. Please try again.');
     }
+  }
+
+  try {
+    const message = {
+      from: messageData.from || 'Anonymous',
+      to: messageData.to,
+      content: messageData.content,
+      timestamp: Timestamp.now(),
+      color: getRandomColor(),
+      likes: 0,
+      ...(imageUrl && { imageUrl }), // Only add imageUrl if it exists
+    };
+
+    await addDoc(collection(db, 'messages'), message);
+
+    // Update or create groups
+    for (const recipient of messageData.to) {
+      const groupId = recipient.toLowerCase();
+      const groupRef = doc(db, 'groups', groupId);
+      
+      try {
+        await updateDoc(groupRef, {
+          messageCount: increment(1),
+        });
+      } catch (error) {
+        // Group doesn't exist, create it
+        await setDoc(groupRef, {
+          id: groupId,
+          displayName: recipient,
+          createdAt: Timestamp.now(),
+          messageCount: 1,
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error saving message to Firestore:', error);
+    throw new Error('Failed to save message. Please try again.');
   }
 };
 

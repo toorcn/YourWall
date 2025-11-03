@@ -96,7 +96,7 @@ export default function RecipientSelector({
         </div>
         <p className="text-xs text-gray-600 italic flex items-center gap-1">
           <Lightbulb className="w-3 h-3" />
-          Tip: You can also type custom group names below (e.g., "Artists", "Cosplayers", etc.)
+          Tip: You can also type custom group names below (e.g., "Registration", "Operations", etc.)
         </p>
       </div>
 
@@ -126,7 +126,7 @@ export default function RecipientSelector({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={selectedRecipients.length === 0 ? "To: (e.g., Volunteers, Committees)" : "Add more..."}
+          placeholder={selectedRecipients.length === 0 ? "To: (e.g., Guest Relations, Events)" : "Add more..."}
           className="flex-1 min-w-[200px] bg-transparent outline-none placeholder:text-gray-500"
         />
       </div>

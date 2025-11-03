@@ -236,6 +236,17 @@ export default function Home() {
               Let&apos;s get started!
               <Sparkles className="w-5 h-5" />
             </motion.div>
+            
+            {/* Inconspicuous browse button */}
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              onClick={() => setHasSubmitted(true)}
+              className="mt-8 text-xs text-gray-400 hover:text-gray-600 underline-offset-2 hover:underline transition-colors"
+            >
+              or just browse
+            </motion.button>
           </motion.div>
         ) : isLoading ? (
           <div className="text-center py-12">
