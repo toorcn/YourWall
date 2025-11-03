@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Heart, Mail } from 'lucide-react';
 import MessageComposer from '@/components/MessageComposer';
@@ -12,7 +12,7 @@ import { subscribeToMessages, subscribeToGroups, initializePopularGroups } from 
 import { Message, Group } from '@/lib/types';
 
 export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [allMessages, setAllMessages] = useState<Message[]>([]); // All messages for computing filters
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -51,34 +51,55 @@ export default function Home() {
     };
   }, []);
 
+  // Initialize groups and subscribe to group changes (runs once)
   useEffect(() => {
-    // Initialize popular groups
     initializePopularGroups();
 
-    // Get the display name for filtering (messages store display names in the 'to' array)
-    const filterValue = selectedFilter === 'all' 
-      ? undefined 
-      : groups.find((g) => g.id === selectedFilter)?.displayName || selectedFilter;
-
-    // Subscribe to messages
-    const unsubscribeMessages = subscribeToMessages(
-      (newMessages) => {
-        setMessages(newMessages);
-        setIsLoading(false);
-      },
-      filterValue
-    );
-
-    // Subscribe to groups
     const unsubscribeGroups = subscribeToGroups((newGroups) => {
       setGroups(newGroups);
     });
 
     return () => {
-      unsubscribeMessages();
       unsubscribeGroups();
     };
-  }, [selectedFilter]);
+  }, []);
+
+  // Subscribe to all messages (no server-side filtering)
+  useEffect(() => {
+    const unsubscribeMessages = subscribeToMessages(
+      (newMessages) => {
+        setAllMessages(newMessages);
+        setIsLoading(false);
+      },
+      undefined // No filter - get all messages
+    );
+
+    return () => {
+      unsubscribeMessages();
+    };
+  }, []);
+
+  // Filter messages client-side based on selected filter
+  const filteredMessages = useMemo(() => {
+    if (selectedFilter === 'all') {
+      return allMessages;
+    }
+    
+    // Find the display name from the actual messages' recipients
+    const recipientsInMessages = new Set<string>();
+    allMessages.forEach(msg => msg.to.forEach(r => recipientsInMessages.add(r)));
+    
+    // Find matching display name (case-insensitive match)
+    const matchingRecipient = Array.from(recipientsInMessages).find(
+      r => r.toLowerCase() === selectedFilter
+    );
+    
+    if (matchingRecipient) {
+      return allMessages.filter(msg => msg.to.includes(matchingRecipient));
+    }
+    
+    return [];
+  }, [selectedFilter, allMessages]);
 
   const availableGroups = groups.map((g) => g.displayName);
 
@@ -166,9 +187,9 @@ export default function Home() {
         </div>
 
         {/* Filter Bar - Only show if user has submitted */}
-        {hasSubmitted && groups.length > 0 && (
+        {hasSubmitted && allMessages.length > 0 && (
           <FilterBar
-            groups={groups}
+            messages={allMessages}
             selectedFilter={selectedFilter}
             onFilterChange={setSelectedFilter}
           />
@@ -225,7 +246,7 @@ export default function Home() {
             />
             <p className="mt-4 text-gray-600">Loading messages...</p>
           </div>
-        ) : messages.length === 0 ? (
+        ) : filteredMessages.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -238,13 +259,13 @@ export default function Home() {
                   <Mail className="w-5 h-5 text-pink-400" />
                 </>
               ) : (
-                `No messages for ${groups.find((g) => g.id === selectedFilter)?.displayName || selectedFilter} yet.`
+                <>No messages for this recipient yet.</>
               )}
             </p>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {messages.map((message, index) => (
+            {filteredMessages.map((message, index) => (
               <MessageCard 
                 key={message.id} 
                 message={message} 

@@ -1,18 +1,34 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Group } from '@/lib/types';
+import { Message } from '@/lib/types';
 
 interface FilterBarProps {
-  groups: Group[];
+  messages: Message[];
   selectedFilter: string;
   onFilterChange: (filter: string) => void;
 }
 
-export default function FilterBar({ groups, selectedFilter, onFilterChange }: FilterBarProps) {
-  // Only show groups that have messages
-  const groupsWithMessages = groups.filter(group => group.messageCount > 0);
-  const allGroups = [{ id: 'all', displayName: 'All Messages', messageCount: 0 }, ...groupsWithMessages];
+export default function FilterBar({ messages, selectedFilter, onFilterChange }: FilterBarProps) {
+  // Compute groups from actual messages' "to" field
+  const recipientCounts = new Map<string, number>();
+  
+  messages.forEach(message => {
+    message.to.forEach(recipient => {
+      recipientCounts.set(recipient, (recipientCounts.get(recipient) || 0) + 1);
+    });
+  });
+
+  // Convert to array and sort by count
+  const groups = Array.from(recipientCounts.entries())
+    .map(([displayName, messageCount]) => ({
+      id: displayName.toLowerCase(),
+      displayName,
+      messageCount,
+    }))
+    .sort((a, b) => b.messageCount - a.messageCount);
+
+  const allGroups = [{ id: 'all', displayName: 'All Messages', messageCount: messages.length }, ...groups];
 
   return (
     <div className="mb-8">
@@ -36,11 +52,9 @@ export default function FilterBar({ groups, selectedFilter, onFilterChange }: Fi
               }`}
             >
               <span className="font-medium">{group.displayName}</span>
-              {group.messageCount > 0 && (
-                <span className={`ml-2 text-xs ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
-                  ({group.messageCount})
-                </span>
-              )}
+              <span className={`ml-2 text-xs ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
+                ({group.messageCount})
+              </span>
             </motion.button>
           );
         })}
