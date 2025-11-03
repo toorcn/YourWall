@@ -17,18 +17,34 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
   const [isDownloading, setIsDownloading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open (mobile-friendly)
   useEffect(() => {
     if (isOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      // Apply styles to prevent scrolling
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      
+      // For iOS Safari
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.position = 'fixed';
+      document.documentElement.style.width = '100%';
+      
+      return () => {
+        // Restore scroll position
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.position = '';
+        document.documentElement.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
     }
-
-    // Cleanup on unmount
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isOpen]);
 
   if (!message) return null;
@@ -302,30 +318,33 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-md overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-2 md:p-4 bg-black/70 backdrop-blur-md overflow-y-auto touch-pan-y"
           onClick={onClose}
+          style={{ WebkitOverflowScrolling: 'touch' }}
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl my-auto"
+            className="relative w-full max-w-4xl my-0 sm:my-auto min-h-screen sm:min-h-0"
+            style={{ touchAction: 'pan-y' }}
           >
-            {/* Close Button */}
+            {/* Close Button - Mobile-friendly positioning */}
             <button
               onClick={onClose}
-              className="absolute -top-10 sm:-top-12 right-0 p-2 text-white hover:bg-white/10 rounded-full transition-colors z-10"
+              className="fixed sm:absolute top-4 right-4 sm:-top-12 p-3 sm:p-2 bg-black/50 sm:bg-transparent hover:bg-white/20 sm:hover:bg-white/10 rounded-full transition-colors z-20 touch-manipulation"
+              aria-label="Close modal"
             >
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6 text-white" />
             </button>
 
-            {/* Shareable Card - Larger format optimized for sharing */}
+            {/* Shareable Card - Mobile-optimized sizing */}
             <div 
               ref={cardRef}
               data-card-content
-              className="relative aspect-[3/4] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+              className="relative w-full sm:aspect-[3/4] min-h-screen sm:min-h-0 rounded-none sm:rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden"
               style={{
                 backgroundImage: 'url(/kiyokocon-card.png)',
                 backgroundSize: 'cover',
@@ -342,8 +361,8 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 }}
               />
 
-              {/* Content */}
-              <div className="relative h-full flex flex-col p-6 sm:p-10 md:p-12 overflow-y-auto">
+              {/* Content - Single scrollable container for mobile */}
+              <div className="relative h-full min-h-screen sm:min-h-0 flex flex-col p-6 sm:p-10 md:p-12">
                 {/* Logo */}
                 <div className="flex justify-center mb-6 sm:mb-8">
                   <img
@@ -355,7 +374,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
 
                 {/* Message Card */}
                 <div
-                  className="flex-1 flex flex-col justify-center p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl backdrop-blur-md border-2 border-white/60 shadow-xl overflow-hidden relative"
+                  className="flex-1 flex flex-col justify-start sm:justify-center p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl backdrop-blur-md border-2 border-white/60 shadow-xl overflow-y-auto sm:overflow-hidden relative"
                   style={{
                     backgroundImage: 'url(/kiyokocon-card.png)',
                     backgroundSize: 'cover',
@@ -392,9 +411,9 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                     </div>
                   </div>
 
-                  {/* Message Content */}
-                  <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-2 space-y-4 sm:space-y-6">
-                    <p className="text-gray-900 text-xl sm:text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words text-center font-semibold max-w-full">
+                  {/* Message Content - Removed nested scroll for mobile */}
+                  <div className="flex-1 flex flex-col items-center justify-start sm:justify-center px-2 space-y-4 sm:space-y-6 py-4">
+                    <p className="text-gray-900 text-lg sm:text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words text-center font-semibold max-w-full">
                       &ldquo;{message.content}&rdquo;
                     </p>
                     
@@ -429,8 +448,8 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
               </div>
             </div>
 
-            {/* Download Button */}
-            <div className="mt-4 sm:mt-6 text-center">
+            {/* Download Button - Mobile-friendly with safe area padding */}
+            <div className="mt-4 sm:mt-6 pb-4 sm:pb-0 text-center">
               <motion.button
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -439,7 +458,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 whileTap={{ scale: 0.95 }}
                 onClick={handleDownload}
                 disabled={isDownloading}
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 <Download className="w-5 h-5" />
                 {isDownloading ? 'Downloading...' : 'Download Image'}

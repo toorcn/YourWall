@@ -96,7 +96,7 @@ export default function RecipientSelector({
         </div>
         <p className="text-xs text-gray-600 italic flex items-center gap-1">
           <Lightbulb className="w-3 h-3" />
-          Tip: You can also type custom group names below (e.g., "Registration", "Operations", etc.)
+          Tip: You can also type custom group names or people's names below (e.g., "Registration", "Operations", "Hong", etc.)
         </p>
       </div>
 
