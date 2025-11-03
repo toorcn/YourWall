@@ -1,10 +1,10 @@
 'use client';
 
+import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download } from 'lucide-react';
 import { Message } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
 
 interface ShareModalProps {
@@ -16,6 +16,20 @@ interface ShareModalProps {
 export default function ShareModal({ message, isOpen, onClose }: ShareModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   if (!message) return null;
 
@@ -61,7 +75,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-2xl my-auto"
+            className="relative w-full max-w-4xl my-auto"
           >
             {/* Close Button */}
             <button
@@ -74,7 +88,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
             {/* Shareable Card - Larger format optimized for sharing */}
             <div 
               ref={cardRef}
-              className="relative aspect-square bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+              className="relative aspect-[3/4] bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Background Pattern */}
               <div className="absolute inset-0">
@@ -84,7 +98,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
               </div>
 
               {/* Content */}
-              <div className="relative h-full flex flex-col p-6 sm:p-10 md:p-12">
+              <div className="relative h-full flex flex-col p-6 sm:p-10 md:p-12 overflow-y-auto">
                 {/* Logo */}
                 <div className="flex justify-center mb-6 sm:mb-8">
                   <img
@@ -123,8 +137,8 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                   </div>
 
                   {/* Message Content */}
-                  <div className="flex-1 flex items-center justify-center">
-                    <p className="text-gray-900 text-xl sm:text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words text-center font-semibold">
+                  <div className="flex-1 overflow-y-auto flex items-center justify-center px-2">
+                    <p className="text-gray-900 text-xl sm:text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words text-center font-semibold max-w-full">
                       "{message.content}"
                     </p>
                   </div>
@@ -141,7 +155,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
             </div>
 
             {/* Download Button */}
-            <div className="mt-4 sm:mt-6 text-center">
+            {/* <div className="mt-4 sm:mt-6 text-center">
               <motion.button
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -163,7 +177,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
               >
                 Share it with the world!
               </motion.p>
-            </div>
+            </div> */}
           </motion.div>
         </motion.div>
       )}

@@ -10,7 +10,9 @@ interface FilterBarProps {
 }
 
 export default function FilterBar({ groups, selectedFilter, onFilterChange }: FilterBarProps) {
-  const allGroups = [{ id: 'all', displayName: 'All Messages', messageCount: 0 }, ...groups];
+  // Only show groups that have messages
+  const groupsWithMessages = groups.filter(group => group.messageCount > 0);
+  const allGroups = [{ id: 'all', displayName: 'All Messages', messageCount: 0 }, ...groupsWithMessages];
 
   return (
     <div className="mb-8">

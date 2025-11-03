@@ -187,8 +187,8 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       placeholder="Share your thoughts, appreciation, or encouragement..."
-                      rows={5}
-                      className="w-full px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500 resize-none"
+                      rows={10}
+                      className="w-full px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500 resize-none overflow-y-auto"
                     />
                     <div className="flex justify-between items-center text-sm mt-1">
                       <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-orange-500' : 'text-gray-500'}>
