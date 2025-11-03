@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Open_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ 
+const openSans = Open_Sans({ 
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-opensans",
 });
 
 const playfair = Playfair_Display({ 
@@ -15,6 +15,10 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "KiyokoCon 2025 - Message Wall",
   description: "Leave messages for volunteers, committees, and friends from KiyokoCon 2025",
+  icons: {
+    icon: "/KiyokoCon_Logo.png",
+    apple: "/KiyokoCon_Logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -24,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className={`${openSans.variable} ${playfair.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

@@ -2,13 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Users, Briefcase, UserCheck, PartyPopper, Globe, Lightbulb } from 'lucide-react';
 
 interface RecipientSelectorProps {
   selectedRecipients: string[];
   onRecipientsChange: (recipients: string[]) => void;
   availableGroups: string[];
 }
+
+const QUICK_SELECT_GROUPS = [
+  { name: 'Volunteers', icon: Users },
+  { name: 'Committees', icon: Briefcase },
+  { name: 'Staff', icon: UserCheck },
+  { name: 'Attendees', icon: PartyPopper },
+  { name: 'Everyone', icon: Globe },
+];
 
 export default function RecipientSelector({
   selectedRecipients,
@@ -60,7 +68,40 @@ export default function RecipientSelector({
   };
 
   return (
-    <div className="relative">
+    <div className="relative space-y-3">
+      {/* Quick Select Buttons */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {QUICK_SELECT_GROUPS.map((group) => {
+            const Icon = group.icon;
+            const isSelected = selectedRecipients.includes(group.name);
+            return (
+              <motion.button
+                key={group.name}
+                type="button"
+                onClick={() => !isSelected && addRecipient(group.name)}
+                disabled={isSelected}
+                whileHover={!isSelected ? { scale: 1.05 } : {}}
+                whileTap={!isSelected ? { scale: 0.95 } : {}}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  isSelected
+                    ? 'bg-purple-200/50 text-purple-400 cursor-not-allowed'
+                    : 'bg-white/40 backdrop-blur-sm border border-white/60 hover:bg-purple-100/50 hover:border-purple-300 text-gray-700'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {group.name}
+              </motion.button>
+            );
+          })}
+        </div>
+        <p className="text-xs text-gray-600 italic flex items-center gap-1">
+          <Lightbulb className="w-3 h-3" />
+          Tip: You can also type custom group names below (e.g., "Artists", "Cosplayers", etc.)
+        </p>
+      </div>
+
+      {/* Input Field */}
       <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus-within:border-purple-300 transition-all">
         {selectedRecipients.map((recipient) => (
           <motion.div
@@ -68,7 +109,7 @@ export default function RecipientSelector({
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-400/30 to-pink-400/30 backdrop-blur-sm border border-white/40 text-sm"
+            className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-300/25 to-pink-300/25 backdrop-blur-sm border border-white/40 text-sm"
           >
             <span>{recipient}</span>
             <button

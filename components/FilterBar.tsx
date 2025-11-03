@@ -29,7 +29,7 @@ export default function FilterBar({ groups, selectedFilter, onFilterChange }: Fi
               onClick={() => onFilterChange(group.id)}
               className={`px-4 py-2 rounded-full backdrop-blur-md border transition-all ${
                 isSelected
-                  ? 'bg-gradient-to-r from-purple-400 to-pink-400 border-white/60 text-white shadow-lg'
+                  ? 'bg-gradient-to-r from-purple-300 to-pink-300 border-white/60 text-white shadow-lg'
                   : 'bg-white/30 border-white/40 text-gray-700 hover:bg-white/50'
               }`}
             >

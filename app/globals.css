@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-opensans: 'Open Sans', system-ui, sans-serif;
   --font-playfair: 'Playfair Display', serif;
 }
 
 body {
-  font-family: var(--font-inter);
+  font-family: var(--font-opensans);
 }
 
 h1, h2, h3 {

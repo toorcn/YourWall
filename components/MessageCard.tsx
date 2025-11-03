@@ -3,13 +3,15 @@
 import { motion } from 'framer-motion';
 import { Message } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
+import { Share2 } from 'lucide-react';
 
 interface MessageCardProps {
   message: Message;
   index: number;
+  onClick: () => void;
 }
 
-export default function MessageCard({ message, index }: MessageCardProps) {
+export default function MessageCard({ message, index, onClick }: MessageCardProps) {
   const formattedTime = message.timestamp
     ? formatDistanceToNow(message.timestamp.toDate(), { addSuffix: true })
     : 'just now';
@@ -20,14 +22,21 @@ export default function MessageCard({ message, index }: MessageCardProps) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       whileHover={{ scale: 1.02, y: -5 }}
-      className="group"
+      className="group cursor-pointer"
+      onClick={onClick}
     >
       <div
-        className="h-full p-6 rounded-3xl backdrop-blur-md border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300"
+        className="h-full p-6 rounded-3xl backdrop-blur-md border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300 relative"
         style={{
           backgroundColor: message.color ? `${message.color}40` : 'rgba(255, 255, 255, 0.3)',
         }}
       >
+        {/* Share Icon Hint */}
+        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="p-2 rounded-full bg-white/60 backdrop-blur-sm">
+            <Share2 className="w-4 h-4 text-purple-600" />
+          </div>
+        </div>
         {/* Header */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
@@ -59,7 +68,7 @@ export default function MessageCard({ message, index }: MessageCardProps) {
         </p>
 
         {/* Decorative element on hover */}
-        <div className="mt-4 h-0.5 bg-gradient-to-r from-purple-300/0 via-purple-300/50 to-purple-300/0 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="mt-4 h-0.5 bg-gradient-to-r from-purple-200/0 via-purple-200/40 to-purple-200/0 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </motion.div>
   );

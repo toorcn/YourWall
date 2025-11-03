@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send } from 'lucide-react';
+import { Send, CheckCircle } from 'lucide-react';
 import { addMessage } from '@/lib/firestore';
 import { MessageFormData } from '@/lib/types';
 import RecipientSelector from './RecipientSelector';
@@ -92,7 +92,7 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
           whileTap={isValid ? { scale: 0.98 } : {}}
           className={`w-full px-6 py-3 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
             isValid
-              ? 'bg-gradient-to-r from-purple-400 to-pink-400 text-white shadow-lg hover:shadow-xl'
+              ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
@@ -113,9 +113,10 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          className="absolute -bottom-12 left-0 right-0 text-center text-green-600 font-medium"
+          className="absolute -bottom-12 left-0 right-0 text-center text-green-600 font-medium flex items-center justify-center gap-2"
         >
-          ✨ Message sent successfully!
+          <CheckCircle className="w-5 h-5" />
+          Message sent successfully!
         </motion.div>
       )}
     </motion.div>
