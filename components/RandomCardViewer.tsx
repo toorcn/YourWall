@@ -26,6 +26,8 @@ export default function RandomCardViewer({ messages, isOpen, onClose }: RandomCa
   const [shuffledMessages, setShuffledMessages] = useState<Message[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1); // 1 for next, -1 for previous
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
 
   // Shuffle messages when modal opens or messages change
   useEffect(() => {
@@ -48,6 +50,60 @@ export default function RandomCardViewer({ messages, isOpen, onClose }: RandomCa
 
   const handleMessageClick = () => {
     // Do nothing - prevent opening share modal when clicking card in viewer
+  };
+
+  // Minimum swipe distance (in pixels)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart({
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    });
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+    
+    const currentX = e.targetTouches[0].clientX;
+    const currentY = e.targetTouches[0].clientY;
+    const deltaX = Math.abs(currentX - touchStart.x);
+    const deltaY = Math.abs(currentY - touchStart.y);
+    
+    // If horizontal movement is clearly dominant, prevent vertical scrolling
+    if (deltaX > 10 && deltaX > deltaY * 1.5) {
+      e.preventDefault();
+    }
+    
+    setTouchEnd({
+      x: currentX,
+      y: currentY,
+    });
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distanceX = touchStart.x - touchEnd.x;
+    const distanceY = touchStart.y - touchEnd.y;
+    const absDistanceX = Math.abs(distanceX);
+    const absDistanceY = Math.abs(distanceY);
+
+    // Only trigger swipe if horizontal movement is greater than vertical (prevents conflict with scrolling)
+    if (absDistanceX > absDistanceY && absDistanceX > minSwipeDistance) {
+      if (distanceX > 0) {
+        // Swiped left - next card
+        handleNext();
+      } else {
+        // Swiped right - previous card
+        handlePrevious();
+      }
+    }
+
+    // Reset touch positions
+    setTouchStart(null);
+    setTouchEnd(null);
   };
 
   // Prevent body scroll when modal is open (mobile-friendly)
@@ -104,7 +160,7 @@ export default function RandomCardViewer({ messages, isOpen, onClose }: RandomCa
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-md"
           onClick={onClose}
         >
           {/* Close Button */}
@@ -123,7 +179,7 @@ export default function RandomCardViewer({ messages, isOpen, onClose }: RandomCa
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', damping: 25 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-2xl px-4 sm:px-0"
+            className="relative w-full max-w-2xl px-1 sm:px-0 max-h-[90vh] flex flex-col items-center"
           >
             {/* Previous Button */}
             {shuffledMessages.length > 1 && (
@@ -136,8 +192,13 @@ export default function RandomCardViewer({ messages, isOpen, onClose }: RandomCa
               </button>
             )}
 
-            {/* Current Card */}
-            <div className="flex flex-col items-center">
+            {/* Card Area */}
+            <div 
+              className="flex flex-col items-center w-full max-h-[calc(90vh-120px)] touch-pan-y"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentIndex}
@@ -145,28 +206,29 @@ export default function RandomCardViewer({ messages, isOpen, onClose }: RandomCa
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: direction > 0 ? -100 : 100 }}
                   transition={{ duration: 0.3 }}
-                  className="w-full"
+                  className="w-full h-full"
                 >
                   <MessageCard
                     message={currentMessage}
                     index={0}
                     onClick={handleMessageClick}
+                    scrollable={true}
                   />
                 </motion.div>
               </AnimatePresence>
-
-              {/* Card Counter */}
-              {shuffledMessages.length > 1 && (
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-white text-sm font-medium"
-                >
-                  {currentIndex + 1} of {shuffledMessages.length}
-                </motion.div>
-              )}
             </div>
+
+            {/* Card Counter */}
+            {shuffledMessages.length > 1 && (
+              <motion.div
+                key={currentIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-6 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full text-white text-sm font-medium shrink-0"
+              >
+                {currentIndex + 1} of {shuffledMessages.length}
+              </motion.div>
+            )}
 
             {/* Next Button */}
             {shuffledMessages.length > 1 && (

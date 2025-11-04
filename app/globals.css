@@ -49,3 +49,14 @@ h1, h2, h3 {
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
+
+/* Custom scrollbar for card viewer - hidden */
+.card-scrollbar::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
+
+.card-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
