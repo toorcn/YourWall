@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Heart, Mail } from 'lucide-react';
 import MessageComposer from '@/components/MessageComposer';
@@ -8,6 +8,7 @@ import MessageCard from '@/components/MessageCard';
 import FilterBar from '@/components/FilterBar';
 import FloatingParticles from '@/components/FloatingParticles';
 import ShareModal from '@/components/ShareModal';
+import RandomCardViewer from '@/components/RandomCardViewer';
 import { subscribeToMessages, subscribeToGroups, initializePopularGroups } from '@/lib/firestore';
 import { Message, Group } from '@/lib/types';
 
@@ -15,9 +16,11 @@ export default function Home() {
   const [allMessages, setAllMessages] = useState<Message[]>([]); // All messages for computing filters
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [selectedSort, setSelectedSort] = useState('newest');
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isRandomViewerOpen, setIsRandomViewerOpen] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const handleMessageClick = (message: Message) => {
@@ -79,27 +82,54 @@ export default function Home() {
     };
   }, []);
 
-  // Filter messages client-side based on selected filter
+  // Filter and sort messages client-side based on selected filter and sort
   const filteredMessages = useMemo(() => {
-    if (selectedFilter === 'all') {
-      return allMessages;
+    let filtered = allMessages;
+    
+    // Apply recipient filter
+    if (selectedFilter !== 'all') {
+      // Find the display name from the actual messages' recipients
+      const recipientsInMessages = new Set<string>();
+      allMessages.forEach(msg => msg.to.forEach(r => recipientsInMessages.add(r)));
+      
+      // Find matching display name (case-insensitive match)
+      const matchingRecipient = Array.from(recipientsInMessages).find(
+        r => r.toLowerCase() === selectedFilter
+      );
+      
+      if (matchingRecipient) {
+        filtered = allMessages.filter(msg => msg.to.includes(matchingRecipient));
+      } else {
+        return [];
+      }
     }
     
-    // Find the display name from the actual messages' recipients
-    const recipientsInMessages = new Set<string>();
-    allMessages.forEach(msg => msg.to.forEach(r => recipientsInMessages.add(r)));
+    // Apply sorting
+    const sorted = [...filtered].sort((a, b) => {
+      switch (selectedSort) {
+        case 'most-liked':
+          const aLikes = a.likes || 0;
+          const bLikes = b.likes || 0;
+          if (bLikes !== aLikes) {
+            return bLikes - aLikes;
+          }
+          // If likes are equal, fall back to newest
+          return b.timestamp.toMillis() - a.timestamp.toMillis();
+        case 'oldest':
+          return a.timestamp.toMillis() - b.timestamp.toMillis();
+        case 'newest':
+        default:
+          return b.timestamp.toMillis() - a.timestamp.toMillis();
+      }
+    });
     
-    // Find matching display name (case-insensitive match)
-    const matchingRecipient = Array.from(recipientsInMessages).find(
-      r => r.toLowerCase() === selectedFilter
-    );
-    
-    if (matchingRecipient) {
-      return allMessages.filter(msg => msg.to.includes(matchingRecipient));
-    }
-    
-    return [];
-  }, [selectedFilter, allMessages]);
+    return sorted;
+  }, [selectedFilter, selectedSort, allMessages]);
+
+  const handleRandomCard = useCallback(() => {
+    if (filteredMessages.length === 0) return;
+    setIsRandomViewerOpen(true);
+  }, [filteredMessages]);
 
   const availableGroups = groups.map((g) => g.displayName);
 
@@ -192,6 +222,9 @@ export default function Home() {
             messages={allMessages}
             selectedFilter={selectedFilter}
             onFilterChange={setSelectedFilter}
+            selectedSort={selectedSort}
+            onSortChange={setSelectedSort}
+            onRandomCard={handleRandomCard}
           />
         )}
 
@@ -307,6 +340,13 @@ export default function Home() {
         message={selectedMessage}
         isOpen={isShareModalOpen}
         onClose={handleCloseShareModal}
+      />
+
+      {/* Random Card Viewer */}
+      <RandomCardViewer
+        messages={filteredMessages}
+        isOpen={isRandomViewerOpen}
+        onClose={() => setIsRandomViewerOpen(false)}
       />
     </div>
   );
