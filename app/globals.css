@@ -5,8 +5,17 @@
   --font-playfair: 'Playfair Display', serif;
 }
 
+html {
+  height: 100%;
+  background: linear-gradient(to bottom right, rgb(250, 245, 255), rgb(253, 244, 255), rgb(239, 246, 255));
+}
+
 body {
   font-family: var(--font-opensans);
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to bottom right, rgb(250, 245, 255), rgb(253, 244, 255), rgb(239, 246, 255));
 }
 
 h1, h2, h3 {

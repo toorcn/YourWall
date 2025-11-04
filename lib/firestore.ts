@@ -155,6 +155,14 @@ export const likeMessage = async (messageId: string): Promise<void> => {
   });
 };
 
+// Unlike a message
+export const unlikeMessage = async (messageId: string): Promise<void> => {
+  const messageRef = doc(db, 'messages', messageId);
+  await updateDoc(messageRef, {
+    likes: increment(-1),
+  });
+};
+
 // Subscribe to messages in real-time
 export const subscribeToMessages = (
   callback: (messages: Message[]) => void,

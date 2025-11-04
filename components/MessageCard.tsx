@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Message, Reply } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { Share2, Heart, MessageSquare, Repeat2 } from 'lucide-react';
-import { likeMessage, subscribeToReplies, getMessage } from '@/lib/firestore';
+import { likeMessage, unlikeMessage, subscribeToReplies, getMessage } from '@/lib/firestore';
 import { useState, useEffect } from 'react';
 import ReplyModal from './ReplyModal';
 import RepostModal from './RepostModal';
@@ -32,6 +32,14 @@ const saveLikedMessage = (messageId: string): void => {
   if (typeof window === 'undefined') return;
   const liked = getLikedMessages();
   liked.add(messageId);
+  localStorage.setItem(LIKED_MESSAGES_KEY, JSON.stringify([...liked]));
+};
+
+// Remove a liked message from localStorage
+const removeLikedMessage = (messageId: string): void => {
+  if (typeof window === 'undefined') return;
+  const liked = getLikedMessages();
+  liked.delete(messageId);
   localStorage.setItem(LIKED_MESSAGES_KEY, JSON.stringify([...liked]));
 };
 
@@ -73,15 +81,23 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening share modal
-    if (isLiking || hasLiked) return; // Prevent multiple clicks or re-liking
+    if (isLiking) return; // Prevent multiple clicks while processing
     
     setIsLiking(true);
     try {
-      await likeMessage(message.id);
-      saveLikedMessage(message.id);
-      setHasLiked(true);
+      if (hasLiked) {
+        // Unlike the message
+        await unlikeMessage(message.id);
+        removeLikedMessage(message.id);
+        setHasLiked(false);
+      } else {
+        // Like the message
+        await likeMessage(message.id);
+        saveLikedMessage(message.id);
+        setHasLiked(true);
+      }
     } catch (error) {
-      console.error('Error liking message:', error);
+      console.error('Error toggling like:', error);
     } finally {
       setTimeout(() => setIsLiking(false), 500); // Reset after animation
     }
@@ -277,14 +293,14 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
             </div>
             <motion.button
               onClick={handleLike}
-              disabled={isLiking || hasLiked}
+              disabled={isLiking}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border transition-all duration-200 ${
                 hasLiked
-                  ? 'bg-pink-100/80 border-pink-300 cursor-not-allowed opacity-100'
+                  ? 'bg-pink-100/80 border-pink-300 hover:bg-pink-100/90 hover:border-pink-400 cursor-pointer'
                   : 'bg-white/60 border-white/60 hover:bg-white/80 hover:border-pink-300 cursor-pointer disabled:opacity-50'
               }`}
-              whileTap={hasLiked ? {} : { scale: 0.9 }}
-              title={hasLiked ? 'You already liked this message' : 'Like this message'}
+              whileTap={{ scale: 0.9 }}
+              title={hasLiked ? 'Unlike this message' : 'Like this message'}
             >
               <motion.div
                 animate={isLiking ? { scale: [1, 1.3, 1] } : {}}
