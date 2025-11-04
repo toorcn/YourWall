@@ -10,6 +10,7 @@ interface RandomCardViewerProps {
   messages: Message[];
   isOpen: boolean;
   onClose: () => void;
+  availableGroups?: string[];
 }
 
 // Fisher-Yates shuffle algorithm
@@ -22,7 +23,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export default function RandomCardViewer({ messages, isOpen, onClose }: RandomCardViewerProps) {
+export default function RandomCardViewer({ messages, isOpen, onClose, availableGroups = [] }: RandomCardViewerProps) {
   const [shuffledMessages, setShuffledMessages] = useState<Message[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1); // 1 for next, -1 for previous
@@ -213,6 +214,7 @@ export default function RandomCardViewer({ messages, isOpen, onClose }: RandomCa
                     index={0}
                     onClick={handleMessageClick}
                     scrollable={true}
+                    availableGroups={availableGroups}
                   />
                 </motion.div>
               </AnimatePresence>

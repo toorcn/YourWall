@@ -315,6 +315,7 @@ export default function Home() {
                 message={message} 
                 index={index}
                 onClick={() => handleMessageClick(message)}
+                availableGroups={availableGroups}
               />
             ))}
           </div>
@@ -347,6 +348,7 @@ export default function Home() {
         messages={filteredMessages}
         isOpen={isRandomViewerOpen}
         onClose={() => setIsRandomViewerOpen(false)}
+        availableGroups={availableGroups}
       />
     </div>
   );

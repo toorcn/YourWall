@@ -2,17 +2,20 @@
 
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Message } from '@/lib/types';
+import { Message, Reply } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { Share2, Heart } from 'lucide-react';
-import { likeMessage } from '@/lib/firestore';
+import { Share2, Heart, MessageSquare, Repeat2 } from 'lucide-react';
+import { likeMessage, subscribeToReplies, getMessage } from '@/lib/firestore';
 import { useState, useEffect } from 'react';
+import ReplyModal from './ReplyModal';
+import RepostModal from './RepostModal';
 
 interface MessageCardProps {
   message: Message;
   index: number;
   onClick: () => void;
   scrollable?: boolean; // Enable scrollable content with fixed header
+  availableGroups?: string[]; // Available groups for reposting
 }
 
 const LIKED_MESSAGES_KEY = 'kiyokocon_liked_messages';
@@ -32,18 +35,40 @@ const saveLikedMessage = (messageId: string): void => {
   localStorage.setItem(LIKED_MESSAGES_KEY, JSON.stringify([...liked]));
 };
 
-export default function MessageCard({ message, index, onClick, scrollable = false }: MessageCardProps) {
+export default function MessageCard({ message, index, onClick, scrollable = false, availableGroups = [] }: MessageCardProps) {
   const [isLiking, setIsLiking] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
+  const [replies, setReplies] = useState<Reply[]>([]);
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [showRepostModal, setShowRepostModal] = useState(false);
+  const [originalMessage, setOriginalMessage] = useState<Message | null>(null);
   
   const formattedTime = message.timestamp
     ? formatDistanceToNow(message.timestamp.toDate(), { addSuffix: true })
     : 'just now';
 
+  // Fetch original message if this is a repost
+  useEffect(() => {
+    if (message.repostedFrom) {
+      getMessage(message.repostedFrom).then((msg) => {
+        if (msg) setOriginalMessage(msg);
+      });
+    }
+  }, [message.repostedFrom]);
+
   // Check if this message has been liked on mount
   useEffect(() => {
     const likedMessages = getLikedMessages();
     setHasLiked(likedMessages.has(message.id));
+  }, [message.id]);
+
+  // Subscribe to replies for this message
+  useEffect(() => {
+    const unsubscribe = subscribeToReplies(message.id, (repliesData) => {
+      setReplies(repliesData);
+    });
+
+    return () => unsubscribe();
   }, [message.id]);
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -60,6 +85,16 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
     } finally {
       setTimeout(() => setIsLiking(false), 500); // Reset after animation
     }
+  };
+
+  const handleReply = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening share modal
+    setShowReplyModal(true);
+  };
+
+  const handleRepost = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening share modal
+    setShowRepostModal(true);
   };
 
   return (
@@ -99,10 +134,20 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
         {/* Header - Fixed when scrollable */}
         <div className={`flex items-start justify-between ${scrollable ? 'mb-3 shrink-0' : 'mb-3'}`}>
           <div className="flex-1">
+            {message.repostedFrom && (
+              <div className="flex items-center gap-1.5 mb-2">
+                <Repeat2 className="w-3 h-3 text-purple-600" />
+                <span className="text-xs text-gray-600 italic">
+                  Reposted by <span className="text-purple-600 font-medium">{message.from || 'Anonymous'}</span>
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <span className="text-sm font-medium text-gray-700">
-                From: <span className="text-purple-600">{message.from || 'Anonymous'}</span>
-              </span>
+              {!message.repostedFrom && (
+                <span className="text-sm font-medium text-gray-700">
+                  From: <span className="text-purple-600">{message.from || 'Anonymous'}</span>
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1 flex-wrap">
               <span className="text-xs text-gray-500">To:</span>
@@ -123,6 +168,27 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
 
         {/* Scrollable Content Area */}
         <div className={scrollable ? 'flex-1 overflow-y-auto card-scrollbar' : ''}>
+          {/* Repost Comment */}
+          {message.repostComment && (
+            <div className="mb-3 p-3 rounded-xl bg-purple-50/60 backdrop-blur-sm border border-purple-200/50">
+              <p className="text-sm text-gray-700 whitespace-pre-wrap italic">
+                "{message.repostComment}"
+              </p>
+            </div>
+          )}
+
+          {/* Original Message Info (if repost) */}
+          {message.repostedFrom && originalMessage && (
+            <div className="mb-3 p-3 rounded-xl bg-gray-50/60 backdrop-blur-sm border border-gray-200/50">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-gray-500">Original message from:</span>
+                <span className="text-xs font-medium text-purple-600">
+                  {originalMessage.from || 'Anonymous'}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Message Content */}
           <p className="text-gray-800 leading-relaxed whitespace-pre-wrap wrap-break-word">
             {message.content}
@@ -149,8 +215,66 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
             </motion.div>
           )}
 
-          {/* Like Button */}
-          <div className="mt-4 flex items-center justify-end">
+          {/* Replies Section */}
+          {replies.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-white/40">
+              <div className="flex items-center gap-2 mb-3">
+                <MessageSquare className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
+                </span>
+              </div>
+              <div className="space-y-3 max-h-64 overflow-y-auto card-scrollbar">
+                {replies.map((reply) => (
+                  <motion.div
+                    key={reply.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/50"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium text-purple-600">
+                        {reply.from || 'Anonymous'}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {reply.timestamp ? formatDistanceToNow(reply.timestamp.toDate(), { addSuffix: true }) : 'just now'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {reply.content}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="mt-4 flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <motion.button
+                onClick={handleReply}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border bg-white/60 border-white/60 hover:bg-white/80 hover:border-purple-300 cursor-pointer transition-all duration-200"
+                whileTap={{ scale: 0.9 }}
+                title="Reply to this message"
+              >
+                <MessageSquare className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-gray-700 hidden sm:inline">
+                  Reply
+                </span>
+              </motion.button>
+              <motion.button
+                onClick={handleRepost}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border bg-white/60 border-white/60 hover:bg-white/80 hover:border-purple-300 cursor-pointer transition-all duration-200"
+                whileTap={{ scale: 0.9 }}
+                title="Repost this message"
+              >
+                <Repeat2 className="w-4 h-4 text-purple-600" />
+                <span className="text-sm font-medium text-gray-700 hidden sm:inline">
+                  Repost
+                </span>
+              </motion.button>
+            </div>
             <motion.button
               onClick={handleLike}
               disabled={isLiking || hasLiked}
@@ -186,6 +310,23 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
           )}
         </div>
       </div>
+
+      {/* Reply Modal */}
+      <ReplyModal
+        isOpen={showReplyModal}
+        onClose={() => setShowReplyModal(false)}
+        messageId={message.id}
+        messageFrom={message.from}
+      />
+
+      {/* Repost Modal */}
+      <RepostModal
+        isOpen={showRepostModal}
+        onClose={() => setShowRepostModal(false)}
+        messageId={message.repostedFrom || message.id}
+        originalMessage={message.repostedFrom ? originalMessage || undefined : message}
+        availableGroups={availableGroups}
+      />
     </motion.div>
   );
 }

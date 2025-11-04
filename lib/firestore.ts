@@ -6,6 +6,7 @@ import {
   onSnapshot,
   Timestamp,
   getDocs,
+  getDoc,
   doc,
   setDoc,
   updateDoc,
@@ -13,7 +14,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Message, Group, MessageFormData } from './types';
+import { Message, Group, MessageFormData, Reply, ReplyFormData } from './types';
 import { uploadMessageImage, compressImage } from './storage';
 
 // Predefined popular groups
@@ -34,6 +35,25 @@ const MESSAGE_COLORS = [
 // Get a random color from the palette
 const getRandomColor = () => {
   return MESSAGE_COLORS[Math.floor(Math.random() * MESSAGE_COLORS.length)];
+};
+
+// Get a message by ID
+export const getMessage = async (messageId: string): Promise<Message | null> => {
+  try {
+    const messageRef = doc(db, 'messages', messageId);
+    const messageSnap = await getDoc(messageRef);
+    
+    if (messageSnap.exists()) {
+      return {
+        id: messageSnap.id,
+        ...messageSnap.data(),
+      } as Message;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting message:', error);
+    return null;
+  }
 };
 
 // Add a new message
@@ -73,14 +93,31 @@ export const addMessage = async (messageData: MessageFormData): Promise<void> =>
   }
 
   try {
+    // If reposting, fetch the original message content
+    let content = messageData.content;
+    let originalImageUrl = undefined;
+    
+    if (messageData.repostedFrom) {
+      const originalMessage = await getMessage(messageData.repostedFrom);
+      if (originalMessage) {
+        content = originalMessage.content;
+        originalImageUrl = originalMessage.imageUrl;
+      } else {
+        throw new Error('Original message not found');
+      }
+    }
+
     const message = {
       from: messageData.from || 'Anonymous',
       to: messageData.to,
-      content: messageData.content,
+      content: content,
       timestamp: Timestamp.now(),
       color: getRandomColor(),
       likes: 0,
-      ...(imageUrl && { imageUrl }), // Only add imageUrl if it exists
+      ...(imageUrl && { imageUrl }), // Use new image if provided
+      ...(originalImageUrl && !imageUrl && { imageUrl: originalImageUrl }), // Use original image if reposting and no new image
+      ...(messageData.repostedFrom && { repostedFrom: messageData.repostedFrom }),
+      ...(messageData.repostComment && { repostComment: messageData.repostComment }),
     };
 
     await addDoc(collection(db, 'messages'), message);
@@ -195,5 +232,42 @@ export const initializePopularGroups = async (): Promise<void> => {
       console.error('Error initializing group:', groupName, error);
     }
   }
+};
+
+// Add a reply to a message
+export const addReply = async (messageId: string, replyData: ReplyFormData): Promise<void> => {
+  try {
+    const reply = {
+      from: replyData.from || 'Anonymous',
+      content: replyData.content,
+      timestamp: Timestamp.now(),
+    };
+
+    const repliesRef = collection(db, 'messages', messageId, 'replies');
+    await addDoc(repliesRef, reply);
+  } catch (error) {
+    console.error('Error saving reply to Firestore:', error);
+    throw new Error('Failed to save reply. Please try again.');
+  }
+};
+
+// Subscribe to replies for a message in real-time
+export const subscribeToReplies = (
+  messageId: string,
+  callback: (replies: Reply[]) => void
+): (() => void) => {
+  const repliesRef = collection(db, 'messages', messageId, 'replies');
+  const q = query(repliesRef, orderBy('timestamp', 'asc'));
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const replies: Reply[] = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Reply[];
+    
+    callback(replies);
+  });
+
+  return unsubscribe;
 };
 
