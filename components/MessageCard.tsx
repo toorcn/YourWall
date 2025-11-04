@@ -184,51 +184,100 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
 
         {/* Scrollable Content Area */}
         <div className={scrollable ? 'flex-1 overflow-y-auto card-scrollbar' : ''}>
-          {/* Repost Comment */}
-          {message.repostComment && (
-            <div className="mb-3 p-3 rounded-xl bg-purple-50/60 backdrop-blur-sm border border-purple-200/50">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap italic">
-                "{message.repostComment}"
+          {/* If repost: Show repost comment first, then original message */}
+          {message.repostedFrom && originalMessage ? (
+            <div className="mb-3">
+              {/* Repost Comment */}
+              {message.repostComment && (
+                <p className="text-gray-800 leading-relaxed whitespace-pre-wrap wrap-break-word mb-3">
+                  {message.repostComment}
+                </p>
+              )}
+              
+              {/* Nested Original Message Reference */}
+              <div className={`p-3 sm:p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-sm ${message.repostComment ? 'ml-2 sm:ml-4' : ''}`}>
+                {/* Original Message Header */}
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="text-xs font-medium text-gray-700">
+                        {originalMessage.from || 'Anonymous'}
+                      </span>
+                      {originalMessage.timestamp && (
+                        <span className="text-xs text-gray-500">
+                          {formatDistanceToNow(originalMessage.timestamp.toDate(), { addSuffix: true })}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <span className="text-xs text-gray-500">To:</span>
+                      {originalMessage.to.map((recipient, idx) => (
+                        <span
+                          key={idx}
+                          className="px-1.5 py-0.5 text-xs rounded-full bg-gray-100/60 border border-gray-200/60 text-gray-600"
+                        >
+                          {recipient}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Original Message Content */}
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap wrap-break-word">
+                  {originalMessage.content}
+                </p>
+
+                {/* Original Message Image */}
+                {originalMessage.imageUrl && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="mt-3 rounded-lg overflow-hidden border border-gray-200/60 shadow-sm relative"
+                  >
+                    <div className="relative w-full" style={{ minHeight: '150px' }}>
+                      <Image
+                        src={originalMessage.imageUrl}
+                        alt="Original message attachment"
+                        width={600}
+                        height={400}
+                        className="w-full max-h-64 object-contain bg-white/50"
+                        style={{ width: '100%', height: 'auto' }}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Regular Message Content */}
+              <p className="text-gray-800 leading-relaxed whitespace-pre-wrap wrap-break-word">
+                {message.content}
               </p>
-            </div>
-          )}
 
-          {/* Original Message Info (if repost) */}
-          {message.repostedFrom && originalMessage && (
-            <div className="mb-3 p-3 rounded-xl bg-gray-50/60 backdrop-blur-sm border border-gray-200/50">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs text-gray-500">Original message from:</span>
-                <span className="text-xs font-medium text-purple-600">
-                  {originalMessage.from || 'Anonymous'}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Message Content */}
-          <p className="text-gray-800 leading-relaxed whitespace-pre-wrap wrap-break-word">
-            {message.content}
-          </p>
-
-          {/* Image Attachment */}
-          {message.imageUrl && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-4 rounded-2xl overflow-hidden border border-white/60 shadow-md relative"
-            >
-              <div className="relative w-full" style={{ minHeight: '200px' }}>
-                <Image
-                  src={message.imageUrl}
-                  alt="Message attachment"
-                  width={600}
-                  height={400}
-                  className="w-full max-h-96 object-contain bg-white/50"
-                  style={{ width: '100%', height: 'auto' }}
-                />
-              </div>
-            </motion.div>
+              {/* Image Attachment */}
+              {message.imageUrl && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-4 rounded-2xl overflow-hidden border border-white/60 shadow-md relative"
+                >
+                  <div className="relative w-full" style={{ minHeight: '200px' }}>
+                    <Image
+                      src={message.imageUrl}
+                      alt="Message attachment"
+                      width={600}
+                      height={400}
+                      className="w-full max-h-96 object-contain bg-white/50"
+                      style={{ width: '100%', height: 'auto' }}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </>
           )}
 
           {/* Replies Section */}
