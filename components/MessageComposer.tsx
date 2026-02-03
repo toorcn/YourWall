@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, CheckCircle, Sparkles, Heart, ArrowRight, Image as ImageIcon, X } from 'lucide-react';
+import { Send, CheckCircle, Sparkles, Heart, ArrowRight } from 'lucide-react';
 import { addMessage } from '@/lib/firestore';
 import { MessageFormData } from '@/lib/types';
-import { validateImageFile } from '@/lib/storage';
 import RecipientSelector from './RecipientSelector';
 
 const MAX_CHARACTERS = 500;
@@ -13,9 +12,10 @@ const MIN_CHARACTERS = 10;
 
 interface MessageComposerProps {
   availableGroups: string[];
+  spaceCode: string;
 }
 
-export default function MessageComposer({ availableGroups }: MessageComposerProps) {
+export default function MessageComposer({ availableGroups, spaceCode }: MessageComposerProps) {
   const [formData, setFormData] = useState<MessageFormData>({
     from: '',
     to: [],
@@ -25,11 +25,8 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
   const [showSuccess, setShowSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState(1); // Start at step 1
   const [step1Skipped, setStep1Skipped] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageError, setImageError] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const stepRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-reveal next step when current step is completed
   useEffect(() => {
@@ -58,70 +55,26 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
     }
   }, [currentStep]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    setImageError(null);
-
-    if (!file) {
-      return;
-    }
-
-    // Validate the file
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      setImageError(validation.error || 'Invalid file');
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      return;
-    }
-
-    // Show warning if file is large
-    if (validation.warning) {
-      console.warn(validation.warning);
-    }
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    // Update form data
-    setFormData({ ...formData, imageFile: file });
-  };
-
-  const handleRemoveImage = () => {
-    setImagePreview(null);
-    setImageError(null);
-    setFormData({ ...formData, imageFile: undefined });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.to.length === 0 || !formData.content.trim() || formData.content.trim().length < MIN_CHARACTERS) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await addMessage(formData);
-      
+      await addMessage(formData, spaceCode);
+
       // Mark that the user has submitted a message
       if (typeof window !== 'undefined') {
-        localStorage.setItem('hasSubmittedMessage', 'true');
+        localStorage.setItem(`hasSubmittedMessage_${spaceCode}`, 'true');
         // Trigger a storage event for the same page
         window.dispatchEvent(new Event('messageSubmitted'));
       }
-      
+
       setFormData({ from: '', to: [], content: '' });
-      setImagePreview(null);
-      setImageError(null);
       setShowSuccess(true);
       setCurrentStep(1);
       setStep1Skipped(false);
@@ -130,7 +83,7 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
       }, 4000);
     } catch (error) {
       console.error('Error sending message:', error);
-      setImageError(error instanceof Error ? error.message : 'Failed to send message');
+      // Error handling could be added here with a toast notification
     } finally {
       setIsSubmitting(false);
     }
@@ -150,12 +103,13 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
         {!showSuccess ? (
           <motion.div
             key="form"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.4, type: "spring", stiffness: 100 }}
+            className="card-modern"
           >
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {/* From Field */}
               <AnimatePresence>
                 {currentStep >= 1 && (
@@ -165,7 +119,7 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   >
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
                       Step 1: Who are you? (Optional)
                     </label>
                     <div className="flex gap-2">
@@ -174,7 +128,7 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                         value={formData.from}
                         onChange={(e) => setFormData({ ...formData, from: e.target.value })}
                         placeholder="Your name, department, role, or stay anonymous"
-                        className="flex-1 px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500"
+                        className="flex-1 px-6 py-5 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed focus-modern"
                         autoFocus
                         disabled={step1Skipped}
                       />
@@ -208,7 +162,7 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   >
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
                       Step 2: Who is this message for? *
                     </label>
                     <RecipientSelector
@@ -231,23 +185,23 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                     className="relative space-y-4"
                   >
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-4">
                         Step 3: Write your message *
                       </label>
                       <textarea
                         value={formData.content}
                         onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                         placeholder="Share your thoughts, appreciation, or encouragement..."
-                        rows={10}
-                        className="w-full px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500 resize-none overflow-y-auto"
+                        rows={12}
+                        className="w-full px-6 py-5 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 resize-none overflow-y-auto focus-modern"
                       />
-                      <div className="flex justify-between items-center text-sm mt-1">
+                      <div className="flex justify-between items-center text-sm mt-3">
                         <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-orange-500' : 'text-gray-500'}>
-                          {contentLength > 0 && contentLength < MIN_CHARACTERS 
+                          {contentLength > 0 && contentLength < MIN_CHARACTERS
                             ? `${MIN_CHARACTERS - contentLength} more characters needed (min ${MIN_CHARACTERS})`
-                            : contentLength >= MIN_CHARACTERS 
-                            ? `✓ ${contentLength} characters`
-                            : `Minimum ${MIN_CHARACTERS} characters`}
+                            : contentLength >= MIN_CHARACTERS
+                              ? `✓ ${contentLength} characters`
+                              : `Minimum ${MIN_CHARACTERS} characters`}
                         </div>
                         <div className={charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}>
                           {charactersRemaining} remaining
@@ -255,68 +209,6 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                       </div>
                     </div>
 
-                    {/* Image Upload */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Add an image (Optional)
-                      </label>
-                      
-                      {!imagePreview ? (
-                        <div>
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                            onChange={handleImageChange}
-                            className="hidden"
-                          />
-                          <motion.button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full px-4 py-3 rounded-2xl bg-white/30 backdrop-blur-md border-2 border-dashed border-white/40 hover:border-purple-300 transition-all flex items-center justify-center gap-2 text-gray-600 hover:text-purple-600"
-                          >
-                            <ImageIcon className="w-5 h-5" />
-                            <span>Click to upload an image</span>
-                          </motion.button>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Max size: 5MB. Supported: JPEG, PNG, GIF, WebP. Large images will be automatically compressed.
-                          </p>
-                        </div>
-                      ) : (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="relative rounded-2xl overflow-hidden bg-white/30 backdrop-blur-md border border-white/40"
-                        >
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="w-full h-48 object-cover"
-                          />
-                          <motion.button
-                            type="button"
-                            onClick={handleRemoveImage}
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="absolute top-2 right-2 p-2 rounded-full bg-red-500 text-white hover:bg-red-600 transition-all shadow-lg"
-                          >
-                            <X className="w-4 h-4" />
-                          </motion.button>
-                        </motion.div>
-                      )}
-
-                      {imageError && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="text-sm text-red-500 mt-2"
-                        >
-                          {imageError}
-                        </motion.p>
-                      )}
-                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -332,11 +224,10 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                     transition={{ delay: 0.2 }}
                     whileHover={isValid ? { scale: 1.02 } : {}}
                     whileTap={isValid ? { scale: 0.98 } : {}}
-                    className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
-                      isValid
-                        ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
+                    className={`w-full px-8 py-5 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 btn-modern ${isValid
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
+                      }`}
                   >
                     {isSubmitting ? (
                       <>
@@ -384,7 +275,7 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                 />
               </div>
             </motion.div>
-            
+
             <motion.h3
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -393,7 +284,7 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
             >
               Message Sent!
             </motion.h3>
-            
+
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -414,9 +305,9 @@ export default function MessageComposer({ availableGroups }: MessageComposerProp
                   key={i}
                   initial={{ y: 0 }}
                   animate={{ y: [-10, 0, -10] }}
-                  transition={{ 
-                    duration: 1.5, 
-                    repeat: Infinity, 
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
                     delay: i * 0.1,
                     ease: 'easeInOut'
                   }}

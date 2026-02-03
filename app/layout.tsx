@@ -13,11 +13,11 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "KiyokoCon 2025 - Message Wall",
-  description: "Leave messages for volunteers, committees, and friends from KiyokoCon 2025",
+  title: "YourWall - Message Board",
+  description: "Create and share message walls for your events and communities",
   icons: {
-    icon: "/KiyokoCon_Logo.png",
-    apple: "/KiyokoCon_Logo.png",
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 

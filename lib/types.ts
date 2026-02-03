@@ -8,9 +8,9 @@ export interface Message {
   timestamp: Timestamp;
   color?: string; // Optional color for visual variety
   likes?: number; // Number of likes/hearts
-  imageUrl?: string; // Optional image attachment
   repostedFrom?: string; // ID of the original message being reposted
   repostComment?: string; // Optional comment added by the reposter
+  spaceCode: string; // Links message to space
 }
 
 export interface Group {
@@ -18,13 +18,45 @@ export interface Group {
   displayName: string; // Formatted display name
   createdAt: Timestamp;
   messageCount: number;
+  spaceCode: string; // Links group to space
+}
+
+export interface Space {
+  code: string; // Unique user-created code
+  title: string; // Space title (e.g., "KiyokoCon 2025")
+  description?: string; // Optional description
+  colors: {
+    primary: string; // Primary gradient color
+    secondary: string; // Secondary gradient color
+    accent: string; // Accent color
+  };
+  popularGroups: string[]; // Custom popular groups for this space
+  createdAt: Timestamp;
+  createdBy?: string; // Optional creator identifier
+  stats: {
+    messageCount: number;
+    groupCount: number;
+    totalLikes: number;
+  };
+}
+
+export interface SpaceFormData {
+  code: string;
+  title: string;
+  description?: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+  };
+  popularGroups: string[];
+  createdBy?: string;
 }
 
 export interface MessageFormData {
   from: string;
   to: string[];
   content: string;
-  imageFile?: File; // Optional image file to upload
   repostedFrom?: string; // ID of the original message being reposted
   repostComment?: string; // Optional comment added by the reposter
 }

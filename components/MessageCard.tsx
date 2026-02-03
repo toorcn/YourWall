@@ -16,6 +16,7 @@ interface MessageCardProps {
   onClick: () => void;
   scrollable?: boolean; // Enable scrollable content with fixed header
   availableGroups?: string[]; // Available groups for reposting
+  spaceCode: string; // Space code for scoping operations
 }
 
 const LIKED_MESSAGES_KEY = 'kiyokocon_liked_messages';
@@ -43,7 +44,7 @@ const removeLikedMessage = (messageId: string): void => {
   localStorage.setItem(LIKED_MESSAGES_KEY, JSON.stringify([...liked]));
 };
 
-export default function MessageCard({ message, index, onClick, scrollable = false, availableGroups = [] }: MessageCardProps) {
+export default function MessageCard({ message, index, onClick, scrollable = false, availableGroups = [], spaceCode }: MessageCardProps) {
   const [isLiking, setIsLiking] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
   const [replies, setReplies] = useState<Reply[]>([]);
@@ -58,11 +59,11 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
   // Fetch original message if this is a repost
   useEffect(() => {
     if (message.repostedFrom) {
-      getMessage(message.repostedFrom).then((msg) => {
+      getMessage(message.repostedFrom, spaceCode).then((msg) => {
         if (msg) setOriginalMessage(msg);
       });
     }
-  }, [message.repostedFrom]);
+  }, [message.repostedFrom, spaceCode]);
 
   // Check if this message has been liked on mount
   useEffect(() => {
@@ -87,12 +88,12 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
     try {
       if (hasLiked) {
         // Unlike the message
-        await unlikeMessage(message.id);
+        await unlikeMessage(message.id, spaceCode);
         removeLikedMessage(message.id);
         setHasLiked(false);
       } else {
         // Like the message
-        await likeMessage(message.id);
+        await likeMessage(message.id, spaceCode);
         saveLikedMessage(message.id);
         setHasLiked(true);
       }
@@ -123,20 +124,13 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
       onClick={onClick}
     >
       <div
-        className={`${scrollable ? 'h-full max-h-[calc(90vh-120px)] flex flex-col' : 'h-full'} p-4 sm:p-6 rounded-3xl backdrop-blur-md border border-white/40 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden`}
-        style={{
-          backgroundImage: 'url(/kiyokocon-card.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
+        className={`${scrollable ? 'h-full max-h-[calc(90vh-120px)] flex flex-col' : 'h-full'} p-6 sm:p-8 rounded-2xl card-modern relative overflow-hidden`}
       >
-        {/* Overlay for text readability */}
-        <div 
-          className="absolute inset-0 rounded-3xl -z-10"
+        {/* Subtle color accent */}
+        <div
+          className="absolute top-0 left-0 w-full h-1 rounded-t-2xl"
           style={{
-            backgroundColor: message.color ? `${message.color}60` : 'rgba(255, 255, 255, 0.6)',
-            backdropFilter: 'blur(8px)',
+            background: `linear-gradient(90deg, ${message.color || '#667eea'}, ${message.color ? message.color.replace(')', ', 0.6)') : '#764ba2'})`,
           }}
         />
         {/* Share Icon Hint */}
@@ -228,26 +222,6 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
                   {originalMessage.content}
                 </p>
 
-                {/* Original Message Image */}
-                {originalMessage.imageUrl && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="mt-3 rounded-lg overflow-hidden border border-gray-200/60 shadow-sm relative"
-                  >
-                    <div className="relative w-full" style={{ minHeight: '150px' }}>
-                      <Image
-                        src={originalMessage.imageUrl}
-                        alt="Original message attachment"
-                        width={600}
-                        height={400}
-                        className="w-full max-h-64 object-contain bg-white/50"
-                        style={{ width: '100%', height: 'auto' }}
-                      />
-                    </div>
-                  </motion.div>
-                )}
               </div>
             </div>
           ) : (
@@ -257,26 +231,6 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
                 {message.content}
               </p>
 
-              {/* Image Attachment */}
-              {message.imageUrl && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mt-4 rounded-2xl overflow-hidden border border-white/60 shadow-md relative"
-                >
-                  <div className="relative w-full" style={{ minHeight: '200px' }}>
-                    <Image
-                      src={message.imageUrl}
-                      alt="Message attachment"
-                      width={600}
-                      height={400}
-                      className="w-full max-h-96 object-contain bg-white/50"
-                      style={{ width: '100%', height: 'auto' }}
-                    />
-                  </div>
-                </motion.div>
-              )}
             </>
           )}
 
@@ -391,6 +345,7 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
         messageId={message.repostedFrom || message.id}
         originalMessage={message.repostedFrom ? originalMessage || undefined : message}
         availableGroups={availableGroups}
+        spaceCode={spaceCode}
       />
     </motion.div>
   );

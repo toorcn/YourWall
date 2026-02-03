@@ -10,17 +10,17 @@ import RecipientSelector from './RecipientSelector';
 const MAX_COMMENT_CHARACTERS = 200;
 
 // Helper function to resolve to the original message (handles nested reposts)
-const resolveOriginalMessage = async (messageId: string): Promise<{ message: Message; originalId: string }> => {
-  const message = await getMessage(messageId);
+const resolveOriginalMessage = async (messageId: string, spaceCode: string): Promise<{ message: Message; originalId: string }> => {
+  const message = await getMessage(messageId, spaceCode);
   if (!message) {
     throw new Error('Message not found');
   }
-  
+
   // If this message is a repost, recursively resolve to the original
   if (message.repostedFrom) {
-    return resolveOriginalMessage(message.repostedFrom);
+    return resolveOriginalMessage(message.repostedFrom, spaceCode);
   }
-  
+
   // This is the original message
   return { message, originalId: message.id };
 };
@@ -31,14 +31,16 @@ interface RepostModalProps {
   messageId: string;
   originalMessage?: Message;
   availableGroups: string[];
+  spaceCode: string;
 }
 
-export default function RepostModal({ 
-  isOpen, 
-  onClose, 
-  messageId, 
+export default function RepostModal({
+  isOpen,
+  onClose,
+  messageId,
   originalMessage,
-  availableGroups 
+  availableGroups,
+  spaceCode
 }: RepostModalProps) {
   const [formData, setFormData] = useState<RepostFormData>({
     from: '',
@@ -59,11 +61,11 @@ export default function RepostModal({
       if (originalMessage) {
         setMessage(originalMessage);
       }
-      
-      getMessage(messageId).then((msg) => {
+
+      getMessage(messageId, spaceCode).then((msg) => {
         if (msg) {
           // Resolve to the original message (handles nested reposts)
-          resolveOriginalMessage(messageId).then(({ message: originalMsg, originalId }) => {
+          resolveOriginalMessage(messageId, spaceCode).then(({ message: originalMsg, originalId }) => {
             setMessage(originalMsg);
             setOriginalMessageId(originalId);
           }).catch((err) => {
@@ -88,11 +90,11 @@ export default function RepostModal({
       setMessage(null);
       setOriginalMessageId(messageId);
     }
-  }, [isOpen, messageId, originalMessage]);
+  }, [isOpen, messageId, originalMessage, spaceCode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.to.length === 0) {
       setError('Please select at least one recipient');
       return;
@@ -100,7 +102,7 @@ export default function RepostModal({
 
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       // Use the resolved original message ID
       await addMessage({
@@ -109,11 +111,11 @@ export default function RepostModal({
         content: '', // Will be filled from original message
         repostedFrom: originalMessageId,
         repostComment: formData.repostComment || undefined,
-      });
-      
+      }, spaceCode);
+
       setFormData({ from: '', to: [], repostComment: '' });
       setShowSuccess(true);
-      
+
       setTimeout(() => {
         setShowSuccess(false);
         onClose();
@@ -172,7 +174,7 @@ export default function RepostModal({
               <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
             </button>
 
-            <div className="p-4 sm:p-6 lg:p-8 overflow-y-auto flex-1">
+            <div className="p-6 sm:p-8 lg:p-10 overflow-y-auto flex-1">
               <div className="max-w-3xl mx-auto h-full flex flex-col">
                 <AnimatePresence mode="wait">
                   {!showSuccess ? (
@@ -183,124 +185,118 @@ export default function RepostModal({
                       exit={{ opacity: 0 }}
                       className="space-y-4 sm:space-y-6 flex-1 flex flex-col"
                     >
-                    <div className="flex items-center gap-2 mb-2 pr-8 sm:pr-12">
-                      <Repeat2 className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
-                      <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
-                        Repost Message
-                      </h2>
-                    </div>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      Share this message with others and optionally add your own comment
-                    </p>
-
-                    {/* Original Message Preview */}
-                    <div className="p-4 sm:p-6 lg:p-8 rounded-2xl bg-gray-50/80 border border-gray-200">
-                      <div className="flex items-center justify-between mb-3 sm:mb-4">
-                        <span className="text-xs sm:text-sm font-medium text-gray-600">
-                          Original message
-                        </span>
-                        <span className="text-xs sm:text-sm text-gray-500">
-                          From: {message.from || 'Anonymous'}
-                        </span>
+                      <div className="flex items-center gap-2 mb-2 pr-8 sm:pr-12">
+                        <Repeat2 className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
+                          Repost Message
+                        </h2>
                       </div>
-                      <p className="text-sm sm:text-base lg:text-lg text-gray-700 whitespace-pre-wrap line-clamp-3">
-                        {message.content}
+                      <p className="text-sm sm:text-base text-gray-600">
+                        Share this message with others and optionally add your own comment
                       </p>
-                      {message.imageUrl && (
-                        <div className="mt-2 sm:mt-3 text-xs sm:text-sm text-gray-500">
-                          📷 Contains image
+
+                      {/* Original Message Preview */}
+                      <div className="p-4 sm:p-6 lg:p-8 rounded-2xl bg-gray-50/80 border border-gray-200">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                          <span className="text-xs sm:text-sm font-medium text-gray-600">
+                            Original message
+                          </span>
+                          <span className="text-xs sm:text-sm text-gray-500">
+                            From: {message.from || 'Anonymous'}
+                          </span>
                         </div>
-                      )}
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                      {/* From Field */}
-                      <div>
-                        <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                          Your name (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.from}
-                          onChange={(e) => setFormData({ ...formData, from: e.target.value })}
-                          placeholder="Your name or stay anonymous"
-                          className="w-full px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
-                          disabled={isSubmitting}
-                        />
+                        <p className="text-sm sm:text-base lg:text-lg text-gray-700 whitespace-pre-wrap line-clamp-3">
+                          {message.content}
+                        </p>
                       </div>
 
-                      {/* Recipients Field */}
-                      <div>
-                        <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                          Share with *
-                        </label>
-                        <RecipientSelector
-                          selectedRecipients={formData.to}
-                          onRecipientsChange={(recipients) => setFormData({ ...formData, to: recipients })}
-                          availableGroups={availableGroups}
-                        />
-                      </div>
+                      <form onSubmit={handleSubmit} className="space-y-8">
+                        {/* From Field */}
+                        <div>
+                          <label className="block text-sm sm:text-base font-medium text-gray-700 mb-4">
+                            Your name (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.from}
+                            onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                            placeholder="Your name or stay anonymous"
+                            className="w-full px-5 sm:px-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
+                            disabled={isSubmitting}
+                          />
+                        </div>
 
-                      {/* Comment Field */}
-                      <div>
-                        <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                          Add a comment (Optional)
-                        </label>
-                        <textarea
-                          value={formData.repostComment || ''}
-                          onChange={(e) => setFormData({ ...formData, repostComment: e.target.value })}
-                          placeholder="Add your thoughts about this message..."
-                          rows={6}
-                          className="w-full px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400 resize-none"
-                          disabled={isSubmitting}
-                        />
-                        <div className="flex justify-end items-center text-sm sm:text-base mt-1">
-                          <div className={commentLength > MAX_COMMENT_CHARACTERS ? 'text-red-500' : 'text-gray-500'}>
-                            {commentLength} / {MAX_COMMENT_CHARACTERS}
+                        {/* Recipients Field */}
+                        <div>
+                          <label className="block text-sm sm:text-base font-medium text-gray-700 mb-4">
+                            Share with *
+                          </label>
+                          <RecipientSelector
+                            selectedRecipients={formData.to}
+                            onRecipientsChange={(recipients) => setFormData({ ...formData, to: recipients })}
+                            availableGroups={availableGroups}
+                          />
+                        </div>
+
+                        {/* Comment Field */}
+                        <div>
+                          <label className="block text-sm sm:text-base font-medium text-gray-700 mb-4">
+                            Add a comment (Optional)
+                          </label>
+                          <textarea
+                            value={formData.repostComment || ''}
+                            onChange={(e) => setFormData({ ...formData, repostComment: e.target.value })}
+                            placeholder="Add your thoughts about this message..."
+                            rows={6}
+                            className="w-full px-5 sm:px-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400 resize-none"
+                            disabled={isSubmitting}
+                          />
+                          <div className="flex justify-end items-center text-sm sm:text-base mt-2">
+                            <div className={commentLength > MAX_COMMENT_CHARACTERS ? 'text-red-500' : 'text-gray-500'}>
+                              {commentLength} / {MAX_COMMENT_CHARACTERS}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {error && (
-                        <motion.p
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="text-sm text-red-500"
-                        >
-                          {error}
-                        </motion.p>
-                      )}
+                        {error && (
+                          <motion.p
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-sm text-red-500"
+                          >
+                            {error}
+                          </motion.p>
+                        )}
 
-                      {/* Submit Button */}
-                      <motion.button
-                        type="submit"
-                        disabled={!isValid || isSubmitting}
-                        whileHover={isValid ? { scale: 1.02 } : {}}
-                        whileTap={isValid ? { scale: 0.98 } : {}}
-                        className={`w-full px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
-                          isValid
+                        {/* Submit Button */}
+                        <motion.button
+                          type="submit"
+                          disabled={!isValid || isSubmitting}
+                          whileHover={isValid ? { scale: 1.02 } : {}}
+                          whileTap={isValid ? { scale: 0.98 } : {}}
+                          className={`w-full px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${isValid
                             ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            >
+                            }`}
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                              >
+                                <Repeat2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                              </motion.div>
+                              Reposting...
+                            </>
+                          ) : (
+                            <>
                               <Repeat2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                            </motion.div>
-                            Reposting...
-                          </>
-                        ) : (
-                          <>
-                            <Repeat2 className="w-5 h-5 sm:w-6 sm:h-6" />
-                            Repost Message
-                          </>
-                        )}
-                      </motion.button>
-                    </form>
+                              Repost Message
+                            </>
+                          )}
+                        </motion.button>
+                      </form>
                     </motion.div>
                   ) : (
                     <motion.div

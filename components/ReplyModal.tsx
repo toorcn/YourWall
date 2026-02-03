@@ -27,20 +27,20 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.content.trim() || formData.content.trim().length < MIN_CHARACTERS) {
       return;
     }
 
     setIsSubmitting(true);
     setError(null);
-    
+
     try {
       await addReply(messageId, formData);
-      
+
       setFormData({ from: '', content: '' });
       setShowSuccess(true);
-      
+
       setTimeout(() => {
         setShowSuccess(false);
         onClose();
@@ -94,7 +94,7 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
               <X className="w-5 h-5 text-gray-600" />
             </button>
 
-            <div className="p-6">
+            <div className="p-8">
               <AnimatePresence mode="wait">
                 {!showSuccess ? (
                   <motion.div
@@ -110,10 +110,10 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                       Share your thoughts or appreciation
                     </p>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                       {/* From Field */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
                           Your name (Optional)
                         </label>
                         <input
@@ -121,14 +121,14 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                           value={formData.from}
                           onChange={(e) => setFormData({ ...formData, from: e.target.value })}
                           placeholder="Your name or stay anonymous"
-                          className="w-full px-4 py-3 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
+                          className="w-full px-6 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
                           disabled={isSubmitting}
                         />
                       </div>
 
                       {/* Content Field */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
                           Your reply *
                         </label>
                         <textarea
@@ -136,16 +136,16 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                           onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                           placeholder="Write your reply..."
                           rows={6}
-                          className="w-full px-4 py-3 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400 resize-none"
+                          className="w-full px-6 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400 resize-none"
                           disabled={isSubmitting}
                         />
-                        <div className="flex justify-between items-center text-sm mt-1">
+                        <div className="flex justify-between items-center text-sm mt-3">
                           <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-orange-500' : 'text-gray-500'}>
-                            {contentLength > 0 && contentLength < MIN_CHARACTERS 
+                            {contentLength > 0 && contentLength < MIN_CHARACTERS
                               ? `${MIN_CHARACTERS - contentLength} more characters needed`
-                              : contentLength >= MIN_CHARACTERS 
-                              ? `✓ ${contentLength} characters`
-                              : `Minimum ${MIN_CHARACTERS} characters`}
+                              : contentLength >= MIN_CHARACTERS
+                                ? `✓ ${contentLength} characters`
+                                : `Minimum ${MIN_CHARACTERS} characters`}
                           </div>
                           <div className={charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}>
                             {charactersRemaining} remaining
@@ -169,11 +169,10 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                         disabled={!isValid || isSubmitting}
                         whileHover={isValid ? { scale: 1.02 } : {}}
                         whileTap={isValid ? { scale: 0.98 } : {}}
-                        className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
-                          isValid
-                            ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
+                        className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${isValid
+                          ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
                       >
                         {isSubmitting ? (
                           <>

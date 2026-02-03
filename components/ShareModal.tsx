@@ -53,9 +53,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
   console.log('ShareModal message:', {
     from: message.from,
     to: message.to,
-    content: message.content,
-    imageUrl: message.imageUrl,
-    hasImage: !!message.imageUrl
+    content: message.content
   });
 
   const handleDownload = async () => {
@@ -417,24 +415,6 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                       &ldquo;{message.content}&rdquo;
                     </p>
                     
-                    {/* Image Attachment */}
-                    {message.imageUrl && (
-                      <div className="w-full max-w-md rounded-xl sm:rounded-2xl overflow-hidden border-2 border-white/60 shadow-lg">
-                        <img
-                          src={message.imageUrl}
-                          alt="Message attachment"
-                          className="w-full h-auto object-contain bg-white/50"
-                          onError={(e) => {
-                            console.error('Image failed to load:', message.imageUrl);
-                            const img = e.target as HTMLImageElement;
-                            img.style.display = 'none';
-                          }}
-                          onLoad={() => {
-                            console.log('Image loaded successfully:', message.imageUrl);
-                          }}
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
 

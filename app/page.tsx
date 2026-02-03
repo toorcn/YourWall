@@ -1,355 +1,251 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useState, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Sparkles, Heart, Mail } from 'lucide-react';
-import MessageComposer from '@/components/MessageComposer';
-import MessageCard from '@/components/MessageCard';
-import FilterBar from '@/components/FilterBar';
-import FloatingParticles from '@/components/FloatingParticles';
-import ShareModal from '@/components/ShareModal';
-import RandomCardViewer from '@/components/RandomCardViewer';
-import { subscribeToMessages, subscribeToGroups, initializePopularGroups } from '@/lib/firestore';
-import { Message, Group } from '@/lib/types';
+import { Sparkles, ArrowRight, Key } from 'lucide-react';
+import { getSpaceByCode } from '@/lib/firestore';
 
 export default function Home() {
-  const [allMessages, setAllMessages] = useState<Message[]>([]); // All messages for computing filters
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [selectedSort, setSelectedSort] = useState('newest');
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isRandomViewerOpen, setIsRandomViewerOpen] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [code, setCode] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleMessageClick = (message: Message) => {
-    setSelectedMessage(message);
-    setIsShareModalOpen(true);
-  };
-
-  const handleCloseShareModal = () => {
-    setIsShareModalOpen(false);
-    setTimeout(() => setSelectedMessage(null), 300);
-  };
-
-  // Check if user has submitted a message
-  useEffect(() => {
-    const checkSubmissionStatus = () => {
-      const hasSubmittedMessage = localStorage.getItem('hasSubmittedMessage') === 'true';
-      setHasSubmitted(hasSubmittedMessage);
-    };
-
-    checkSubmissionStatus();
-
-    // Listen for message submission events
-    const handleMessageSubmitted = () => {
-      setHasSubmitted(true);
-    };
-
-    window.addEventListener('messageSubmitted', handleMessageSubmitted);
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
     
-    return () => {
-      window.removeEventListener('messageSubmitted', handleMessageSubmitted);
-    };
-  }, []);
-
-  // Initialize groups and subscribe to group changes (runs once)
-  useEffect(() => {
-    initializePopularGroups();
-
-    const unsubscribeGroups = subscribeToGroups((newGroups) => {
-      setGroups(newGroups);
-    });
-
-    return () => {
-      unsubscribeGroups();
-    };
-  }, []);
-
-  // Subscribe to all messages (no server-side filtering)
-  useEffect(() => {
-    const unsubscribeMessages = subscribeToMessages(
-      (newMessages) => {
-        setAllMessages(newMessages);
-        setIsLoading(false);
-      },
-      undefined // No filter - get all messages
-    );
-
-    return () => {
-      unsubscribeMessages();
-    };
-  }, []);
-
-  // Filter and sort messages client-side based on selected filter and sort
-  const filteredMessages = useMemo(() => {
-    let filtered = allMessages;
-    
-    // Apply recipient filter
-    if (selectedFilter !== 'all') {
-      // Find the display name from the actual messages' recipients
-      const recipientsInMessages = new Set<string>();
-      allMessages.forEach(msg => msg.to.forEach(r => recipientsInMessages.add(r)));
-      
-      // Find matching display name (case-insensitive match)
-      const matchingRecipient = Array.from(recipientsInMessages).find(
-        r => r.toLowerCase() === selectedFilter
-      );
-      
-      if (matchingRecipient) {
-        filtered = allMessages.filter(msg => msg.to.includes(matchingRecipient));
-      } else {
-        return [];
-      }
+    if (!code.trim()) {
+      setError('Please enter a space code');
+      return;
     }
+
+    setIsLoading(true);
     
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
-      switch (selectedSort) {
-        case 'most-liked':
-          const aLikes = a.likes || 0;
-          const bLikes = b.likes || 0;
-          if (bLikes !== aLikes) {
-            return bLikes - aLikes;
-          }
-          // If likes are equal, fall back to newest
-          return b.timestamp.toMillis() - a.timestamp.toMillis();
-        case 'oldest':
-          return a.timestamp.toMillis() - b.timestamp.toMillis();
-        case 'newest':
-        default:
-          return b.timestamp.toMillis() - a.timestamp.toMillis();
+    try {
+      const normalizedCode = code.toLowerCase().trim();
+      const space = await getSpaceByCode(normalizedCode);
+      
+      if (!space) {
+        setError('Space not found. Please check your code and try again.');
+        setIsLoading(false);
+        return;
       }
-    });
-    
-    return sorted;
-  }, [selectedFilter, selectedSort, allMessages]);
-
-  const handleRandomCard = useCallback(() => {
-    if (filteredMessages.length === 0) return;
-    setIsRandomViewerOpen(true);
-  }, [filteredMessages]);
-
-  const availableGroups = groups.map((g) => g.displayName);
+      
+      // Redirect to the space page
+      router.push(`/${normalizedCode}`);
+    } catch (err) {
+      console.error('Error checking space:', err);
+      setError('Failed to verify space code. Please try again.');
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Floating Particles */}
-      <FloatingParticles />
-      
-      {/* Animated Background */}
+      {/* Modern Background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50" />
-        
-        {/* Floating orbs */}
+        {/* Animated geometric shapes */}
         <motion.div
-          className="absolute top-20 left-20 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl"
+          className="absolute top-20 left-10 w-72 h-72 opacity-10"
           animate={{
-            x: [0, 50, 0],
-            y: [0, 30, 0],
+            rotate: [0, 360],
             scale: [1, 1.1, 1],
           }}
           transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "easeInOut",
+            rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+            scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
           }}
-        />
+        >
+          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-600 rounded-full"></div>
+        </motion.div>
+
         <motion.div
-          className="absolute top-40 right-20 w-96 h-96 bg-pink-200/20 rounded-full blur-3xl"
+          className="absolute top-40 right-20 w-96 h-96 opacity-8"
           animate={{
-            x: [0, -30, 0],
-            y: [0, 50, 0],
+            rotate: [360, 0],
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+          }}
+          transition={{
+            rotate: { duration: 25, repeat: Infinity, ease: "linear" },
+            x: { duration: 8, repeat: Infinity, ease: "easeInOut" },
+            y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+          }}
+        >
+          <div className="w-full h-full bg-gradient-to-br from-pink-400 to-red-500 rounded-full blur-2xl"></div>
+        </motion.div>
+
+        <motion.div
+          className="absolute bottom-32 left-1/4 w-80 h-80 opacity-6"
+          animate={{
             scale: [1, 1.2, 1],
+            rotate: [0, 180, 360],
           }}
           transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
+            scale: { duration: 10, repeat: Infinity, ease: "easeInOut" },
+            rotate: { duration: 30, repeat: Infinity, ease: "linear" }
           }}
-        />
-        <motion.div
-          className="absolute bottom-20 left-1/3 w-80 h-80 bg-blue-200/20 rounded-full blur-3xl"
-          animate={{
-            x: [0, 40, 0],
-            y: [0, -40, 0],
-            scale: [1, 1.15, 1],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
+        >
+          <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full blur-3xl"></div>
+        </motion.div>
+
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `
+              linear-gradient(rgba(102, 126, 234, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(102, 126, 234, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px'
+          }}></div>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="relative max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* Header */}
+      <div className="relative max-w-2xl mx-auto px-4 py-12 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="w-full"
         >
-          <div className="flex justify-center mb-6">
-            <motion.img
-              src="/KiyokoCon_Logo.png"
-              alt="KiyokoCon Logo"
-              className="h-32 sm:h-40 w-auto"
+          <div className="text-center mb-16">
+            <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            />
+              transition={{ delay: 0.2 }}
+              className="flex justify-center mb-8"
+            >
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl pulse-glow">
+                  <Key className="w-10 h-10 text-white" />
+                </div>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center"
+                >
+                  <Sparkles className="w-4 h-4 text-white" />
+                </motion.div>
+              </div>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-5xl sm:text-6xl font-bold mb-6 gradient-text"
+            >
+              YourWall
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl text-gray-600 font-medium mb-2"
+            >
+              Enter your space code to continue
+            </motion.p>
+
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-sm text-gray-500"
+            >
+              Join the conversation in your dedicated space
+            </motion.p>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-serif font-bold mb-4 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent">
-            KiyokoCon 2025
-          </h1>
-          <p className="text-xl text-gray-600 font-light flex items-center justify-center gap-2">
-            Leave a message for each other
-            <Sparkles className="w-5 h-5 text-purple-500" />
-          </p>
-        </motion.div>
 
-        {/* Message Composer */}
-        <div className="mb-12 max-w-2xl mx-auto">
-          <MessageComposer availableGroups={availableGroups} />
-        </div>
-
-        {/* Filter Bar - Only show if user has submitted */}
-        {hasSubmitted && allMessages.length > 0 && (
-          <FilterBar
-            messages={allMessages}
-            selectedFilter={selectedFilter}
-            onFilterChange={setSelectedFilter}
-            selectedSort={selectedSort}
-            onSortChange={setSelectedSort}
-            onRandomCard={handleRandomCard}
-          />
-        )}
-
-        {/* Messages Grid or Prompt */}
-        {!hasSubmitted ? (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-center py-16 px-6"
+            transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+            className="card-modern max-w-lg mx-auto p-10"
           >
-            <motion.div
-              animate={{ 
-                scale: [1, 1.1, 1],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ 
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="inline-block mb-6"
-            >
-              <Mail className="w-24 h-24 text-purple-300" />
-            </motion.div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              Share Your Thoughts First! 💌
-            </h2>
-            <p className="text-lg text-gray-600 mb-2 max-w-2xl mx-auto">
-              To see what others have written, you need to contribute to the message wall first.
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
+                  Space Code
+                </label>
+                <input
+                  id="code"
+                  type="text"
+                  value={code}
+                  onChange={(e) => {
+                    setCode(e.target.value.toLowerCase().trim());
+                    setError(null);
+                  }}
+                  placeholder="your-space-code"
+                  className="w-full px-6 py-4 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 text-center text-lg font-medium focus-modern"
+                  autoFocus
+                  disabled={isLoading}
+                  pattern="[a-z0-9]{3,20}"
+                  title="3-20 lowercase letters and numbers only"
+                />
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Enter the unique code for your message space
             </p>
-            <p className="text-md text-gray-500 max-w-2xl mx-auto">
-              Write a message above to unlock the full wall of messages from our community!
-            </p>
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
-              className="mt-8 inline-flex items-center gap-2 text-purple-500 font-medium"
-            >
-              <Sparkles className="w-5 h-5" />
-              Let&apos;s get started!
-              <Sparkles className="w-5 h-5" />
-            </motion.div>
-            
-            {/* Inconspicuous browse button */}
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              onClick={() => setHasSubmitted(true)}
-              className="mt-8 text-xs text-gray-400 hover:text-gray-600 underline-offset-2 hover:underline transition-colors"
-            >
-              or just browse
-            </motion.button>
-          </motion.div>
-        ) : isLoading ? (
-          <div className="text-center py-12">
+              </div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm text-center font-medium"
+                >
+                  {error}
+                </motion.div>
+              )}
+
+              <motion.button
+                type="submit"
+                disabled={isLoading || !code.trim()}
+                whileHover={!isLoading && code.trim() ? { scale: 1.02 } : {}}
+                whileTap={!isLoading && code.trim() ? { scale: 0.98 } : {}}
+                className={`w-full px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 btn-modern ${
+                  isLoading || !code.trim()
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl'
+                }`}
+              >
+                {isLoading ? (
+                  <>
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="inline-block w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full"
-            />
-            <p className="mt-4 text-gray-600">Loading messages...</p>
-          </div>
-        ) : filteredMessages.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <p className="text-gray-500 text-lg flex items-center justify-center gap-2">
-              {selectedFilter === 'all' ? (
-                <>
-                  No messages yet. Be the first to leave one!
-                  <Mail className="w-5 h-5 text-pink-400" />
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Sparkles className="w-5 h-5" />
+                    </motion.div>
+                    Checking...
                 </>
               ) : (
-                <>No messages for this recipient yet.</>
-              )}
-            </p>
+                  <>
+                    Enter Space
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </motion.button>
+            </form>
+
+            <div className="mt-10 pt-8 border-t border-gray-200">
+              <p className="text-center text-sm text-gray-600 mb-6">
+                Don't have a space code yet?
+              </p>
+              <motion.a
+                href="/create"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="block w-full px-6 py-4 rounded-xl font-medium text-center bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 text-gray-700 hover:text-blue-600 shadow-sm hover:shadow-md"
+              >
+                Create New Space
+              </motion.a>
+            </div>
           </motion.div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMessages.map((message, index) => (
-              <MessageCard 
-                key={message.id} 
-                message={message} 
-                index={index}
-                onClick={() => handleMessageClick(message)}
-                availableGroups={availableGroups}
-              />
-            ))}
-          </div>
-        )}
+        </motion.div>
       </div>
-
-      {/* Footer */}
-      <motion.footer
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1 }}
-        className="relative text-center py-8 text-gray-500 text-sm"
-      >
-        <p className="flex items-center justify-center gap-1.5">
-          Made with
-          <Heart className="w-4 h-4 text-purple-500 fill-purple-500" />
-          for KiyokoCon 2025
-        </p>
-      </motion.footer>
-
-      {/* Share Modal */}
-      <ShareModal
-        message={selectedMessage}
-        isOpen={isShareModalOpen}
-        onClose={handleCloseShareModal}
-      />
-
-      {/* Random Card Viewer */}
-      <RandomCardViewer
-        messages={filteredMessages}
-        isOpen={isRandomViewerOpen}
-        onClose={() => setIsRandomViewerOpen(false)}
-        availableGroups={availableGroups}
-      />
     </div>
   );
 }
