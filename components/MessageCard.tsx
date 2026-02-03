@@ -17,6 +17,8 @@ interface MessageCardProps {
   scrollable?: boolean; // Enable scrollable content with fixed header
   availableGroups?: string[]; // Available groups for reposting
   spaceCode: string; // Space code for scoping operations
+  onShare?: () => void; // New prop for custom sharing behavior
+  isCopied?: boolean; // New prop for showing copied state
 }
 
 const LIKED_MESSAGES_KEY = 'yourwall_liked_messages';
@@ -44,7 +46,16 @@ const removeLikedMessage = (messageId: string): void => {
   localStorage.setItem(LIKED_MESSAGES_KEY, JSON.stringify([...liked]));
 };
 
-export default function MessageCard({ message, index, onClick, scrollable = false, availableGroups = [], spaceCode }: MessageCardProps) {
+export default function MessageCard({
+  message,
+  index,
+  onClick,
+  scrollable = false,
+  availableGroups = [],
+  spaceCode,
+  onShare,
+  isCopied
+}: MessageCardProps) {
   const [isLiking, setIsLiking] = useState(false);
   const [hasLiked, setHasLiked] = useState(false);
   const [replies, setReplies] = useState<Reply[]>([]);
@@ -122,6 +133,7 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
       whileHover={scrollable ? {} : { scale: 1.02, y: -5 }}
       className="group cursor-pointer"
       onClick={onClick}
+      id={`message-${message.id}`}
     >
       <div
         className={`${scrollable ? 'h-full max-h-[calc(90vh-120px)] flex flex-col' : 'h-full'} p-6 sm:p-8 rounded-2xl card-modern relative overflow-hidden`}
@@ -283,45 +295,52 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
             <div className="flex items-center gap-2">
               <motion.button
                 onClick={handleReply}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border bg-surface-50/60 border-surface-50/60 hover:bg-surface-100/80 hover:border-brand-300 cursor-pointer transition-all duration-200"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-sm border bg-surface-50/60 border-surface-50/60 hover:bg-surface-100/80 hover:border-brand-300 cursor-pointer transition-all duration-200"
                 whileTap={{ scale: 0.9 }}
                 title="Reply to this message"
               >
-                <MessageSquare className="w-4 h-4 text-brand-600" />
-                <span className="text-sm font-medium text-brand-900/80 hidden sm:inline">
+                <MessageSquare className="w-3.5 h-3.5 text-brand-600" />
+                <span className="text-xs font-medium text-brand-900/80 hidden sm:inline">
                   Reply
                 </span>
               </motion.button>
               <motion.button
                 onClick={handleRepost}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border bg-surface-50/60 border-surface-50/60 hover:bg-surface-100/80 hover:border-brand-300 cursor-pointer transition-all duration-200"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-sm border bg-surface-50/60 border-surface-50/60 hover:bg-surface-100/80 hover:border-brand-300 cursor-pointer transition-all duration-200"
                 whileTap={{ scale: 0.9 }}
                 title="Repost this message"
               >
-                <Repeat2 className="w-4 h-4 text-brand-600" />
-                <span className="text-sm font-medium text-brand-900/80 hidden sm:inline">
+                <Repeat2 className="w-3.5 h-3.5 text-brand-600" />
+                <span className="text-xs font-medium text-brand-900/80 hidden sm:inline">
                   Repost
                 </span>
               </motion.button>
               <motion.button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onClick();
+                  if (onShare) {
+                    onShare();
+                  } else {
+                    onClick();
+                  }
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border bg-surface-50/60 border-surface-50/60 hover:bg-surface-100/80 hover:border-brand-300 cursor-pointer transition-all duration-200"
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-sm border transition-all duration-200 ${isCopied
+                  ? 'bg-brand-100 border-brand-300 text-brand-700'
+                  : 'bg-surface-50/60 border-surface-50/60 hover:bg-surface-100/80 hover:border-brand-300'
+                  }`}
                 whileTap={{ scale: 0.9 }}
                 title="Share this message"
               >
-                <Share2 className="w-4 h-4 text-brand-600" />
-                <span className="text-sm font-medium text-brand-900/80 hidden sm:inline">
-                  Share
+                <Share2 className="w-3.5 h-3.5 text-brand-600" />
+                <span className="text-xs font-medium text-brand-900/80 hidden sm:inline">
+                  {isCopied ? 'Copied!' : 'Share'}
                 </span>
               </motion.button>
             </div>
             <motion.button
               onClick={handleLike}
               disabled={isLiking}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border transition-all duration-200 ${hasLiked
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full backdrop-blur-sm border transition-all duration-200 ${hasLiked
                 ? 'bg-accent-100/80 border-accent-300 hover:bg-accent-100/90 hover:border-accent-400 cursor-pointer'
                 : 'bg-surface-50/60 border-surface-50/60 hover:bg-surface-100/80 hover:border-accent-300 cursor-pointer disabled:opacity-50'
                 }`}
@@ -333,13 +352,13 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
                 transition={{ duration: 0.3 }}
               >
                 <Heart
-                  className={`w-4 h-4 transition-colors ${hasLiked || (message.likes || 0) > 0
+                  className={`w-3.5 h-3.5 transition-colors ${hasLiked || (message.likes || 0) > 0
                     ? 'text-accent-500 fill-accent-500'
                     : 'text-brand-900/60'
                     }`}
                 />
               </motion.div>
-              <span className={`text-sm font-medium ${hasLiked ? 'text-accent-600' : 'text-brand-900/80'}`}>
+              <span className={`text-xs font-medium ${hasLiked ? 'text-accent-600' : 'text-brand-900/80'}`}>
                 {message.likes || 0}
               </span>
             </motion.button>
@@ -372,4 +391,3 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
     </motion.div>
   );
 }
-

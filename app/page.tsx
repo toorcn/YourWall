@@ -119,12 +119,12 @@ export default function Home() {
               className="flex justify-center mb-8"
             >
               <div className="relative">
-                <div className="w-32 h-32 bg-gradient-to-br from-brand-500 to-brand-600 rounded-3xl flex items-center justify-center shadow-2xl pulse-glow overflow-hidden relative">
+                <div className="w-32 h-32 flex items-center justify-center p-4">
                   <NextImage
-                    src="/brand-icon.webp"
+                    src="/icon-variant-minimal.svg"
                     alt="YourWall Logo"
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     priority
                   />
                 </div>
@@ -151,7 +151,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-xl text-brand-900/70 font-medium mb-2"
+              className="text-xl text-brand-900/90 font-medium mb-2"
             >
               Enter your space code to continue
             </motion.p>
@@ -160,7 +160,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="text-sm text-brand-900/70"
+              className="text-sm text-brand-900/80"
             >
               Join the conversation in your dedicated space
             </motion.p>
@@ -192,7 +192,7 @@ export default function Home() {
                   pattern="[a-z0-9]{3,20}"
                   title="3-20 lowercase letters and numbers only"
                 />
-                <p className="text-xs text-brand-900/70 mt-2 text-center">
+                <p className="text-xs text-brand-900/80 mt-2 text-center">
                   Enter the unique code for your message space
                 </p>
               </div>

@@ -57,12 +57,12 @@ export default function FilterBar({ messages, selectedFilter, onFilterChange, se
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onFilterChange(group.id)}
                 className={`px-4 py-2 rounded-full backdrop-blur-md border transition-all ${isSelected
-                  ? 'bg-gradient-to-r from-brand-500 to-accent-500 border-white/60 text-white shadow-lg'
-                  : 'bg-surface-50/30 border-surface-100/40 text-brand-900/80 hover:bg-surface-50/50'
+                  ? 'bg-brand-100 border-brand-500 text-brand-900 shadow-sm font-medium'
+                  : 'bg-surface-50/30 border-surface-200/60 text-brand-700 hover:bg-surface-100 hover:border-brand-200'
                   }`}
               >
                 <span className="font-medium">{group.displayName}</span>
-                <span className={`ml-2 text-xs ${isSelected ? 'text-white/80' : 'text-brand-900/50'}`}>
+                <span className={`ml-2 text-xs ${isSelected ? 'text-brand-700' : 'text-brand-900/60'}`}>
                   ({group.messageCount})
                 </span>
               </motion.button>
@@ -89,13 +89,13 @@ export default function FilterBar({ messages, selectedFilter, onFilterChange, se
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onSortChange(option.id)}
-                className={`px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 text-sm font-medium ${isSelected
-                  ? 'bg-gradient-to-r from-brand-500 to-accent-500 text-white shadow-md'
-                  : 'text-brand-900/80 hover:bg-white/30'
+                className={`px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 text-sm font-medium border ${isSelected
+                  ? 'bg-brand-100 border-brand-500 text-brand-900 shadow-sm'
+                  : 'border-transparent text-brand-700 hover:bg-brand-50/50'
                   }`}
                 title={option.label}
               >
-                <Icon className={`w-3.5 h-3.5 ${option.id === 'most-liked' && isSelected ? 'fill-white' : ''}`} />
+                <Icon className={`w-3.5 h-3.5 ${option.id === 'most-liked' && isSelected ? 'fill-brand-900' : ''}`} />
                 <span className={isSelected ? 'inline' : 'hidden sm:inline'}>{option.label}</span>
               </motion.button>
             );
@@ -111,7 +111,7 @@ export default function FilterBar({ messages, selectedFilter, onFilterChange, se
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onRandomCard}
-          className="w-full px-6 py-4 rounded-2xl backdrop-blur-md border-2 transition-all flex items-center justify-center gap-3 bg-transparent border-brand-300 text-brand-500 hover:bg-brand-200/50 hover:text-brand-700 shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg"
+          className="w-full px-6 py-4 rounded-2xl backdrop-blur-md border-2 transition-all flex items-center justify-center gap-3 bg-transparent border-brand-400 text-brand-700 hover:bg-brand-200/50 hover:text-brand-800 shadow-lg hover:shadow-xl font-semibold text-base sm:text-lg"
         >
           <Shuffle className="w-5 h-5 sm:w-6 sm:h-6" />
           <span>View Random Cards</span>

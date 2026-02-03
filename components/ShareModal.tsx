@@ -11,9 +11,10 @@ interface ShareModalProps {
   message: Message | null;
   isOpen: boolean;
   onClose: () => void;
+  spaceTitle?: string;
 }
 
-export default function ShareModal({ message, isOpen, onClose }: ShareModalProps) {
+export default function ShareModal({ message, isOpen, onClose, spaceTitle }: ShareModalProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -361,13 +362,18 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
 
               {/* Content - Single scrollable container for mobile */}
               <div className="relative h-full min-h-screen sm:min-h-0 flex flex-col p-6 sm:p-10 md:p-12">
-                {/* Logo */}
-                <div className="flex justify-center mb-6 sm:mb-8">
-                  <img
-                    src="/brand-icon.webp"
-                    alt="YourWall"
-                    className="h-16 sm:h-24 md:h-28 w-auto"
-                  />
+                {/* Header Logo/Name */}
+                <div className="flex items-center justify-center gap-4 mb-6 sm:mb-8">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
+                    <img
+                      src="/icon-transparent.svg"
+                      alt=""
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-brand-800 via-brand-600 to-brand-800 bg-clip-text text-transparent drop-shadow-sm tracking-tight text-center leading-tight">
+                    {spaceTitle || 'YourWall'}
+                  </h1>
                 </div>
 
                 {/* Message Card */}
@@ -419,11 +425,19 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 </div>
 
                 {/* Footer */}
-                <div className="mt-6 sm:mt-8 text-center">
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-brand-600 via-accent-600 to-brand-600 bg-clip-text text-transparent mb-1">
-                    YourWall
-                  </p>
-                  <p className="text-sm sm:text-base text-gray-700 font-medium">Message Wall</p>
+                <div className="mt-auto pt-6 sm:pt-8 text-center">
+                  <div className="inline-flex items-center gap-2.5 bg-white/40 backdrop-blur-md py-2.5 px-6 rounded-full border border-white/50 shadow-sm transition-all hover:bg-white/60">
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 relative">
+                      <img
+                        src="/icon-transparent.svg"
+                        alt=""
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <p className="text-sm sm:text-base text-brand-900 font-bold tracking-tight">
+                      {typeof window !== 'undefined' ? window.location.host : 'yourwall.com'}/{message.spaceCode}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

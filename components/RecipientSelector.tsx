@@ -131,8 +131,8 @@ export default function RecipientSelector({
               <span
                 key={group.name}
                 className={`text-xs flex items-center gap-1 ${isSelected
-                  ? 'text-brand-400 opacity-60'
-                  : 'text-brand-900/50 opacity-70'
+                  ? 'text-brand-600'
+                  : 'text-brand-900/70'
                   }`}
               >
                 <Icon className="w-3 h-3" />

@@ -159,7 +159,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                       )}
                     </div>
                     {step1Skipped && (
-                      <p className="text-xs text-brand-900/50 mt-1 italic">Continuing as Anonymous</p>
+                      <p className="text-xs text-brand-900/70 mt-1 italic">Continuing as Anonymous</p>
                     )}
                   </motion.div>
                 )}
@@ -207,14 +207,14 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                       className="w-full px-6 py-5 rounded-xl bg-surface-50 border-2 border-surface-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 focus:outline-none transition-all duration-300 placeholder:text-brand-900/50 resize-none overflow-y-auto focus-modern text-brand-900"
                     />
                     <div className="flex justify-between items-center text-sm mt-3 px-2">
-                      <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-accent-500' : 'text-brand-900/50'}>
+                      <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-accent-500' : 'text-brand-900/70'}>
                         {contentLength > 0 && contentLength < MIN_CHARACTERS
                           ? `${MIN_CHARACTERS - contentLength} more characters needed (min ${MIN_CHARACTERS})`
                           : contentLength >= MIN_CHARACTERS
                             ? `✓ ${contentLength} characters`
                             : `Minimum ${MIN_CHARACTERS} characters`}
                       </div>
-                      <div className={charactersRemaining < 50 ? 'text-accent-500' : 'text-brand-900/50'}>
+                      <div className={charactersRemaining < 50 ? 'text-accent-500' : 'text-brand-900/70'}>
                         {charactersRemaining} remaining
                       </div>
                     </div>
@@ -289,7 +289,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-2xl font-bold text-gray-800 mb-2"
+              className="text-2xl font-bold text-brand-900 mb-2"
             >
               Message Sent!
             </motion.h3>
@@ -298,7 +298,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-gray-600 mb-6"
+              className="text-brand-900/80 mb-6"
             >
               Your message has been added to the wall
             </motion.p>

@@ -186,10 +186,15 @@ export default function CreateSpacePage() {
           className="bg-surface-50/30 backdrop-blur-md rounded-3xl p-8 border border-surface-100/40 shadow-xl"
         >
           <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-2 bg-gradient-to-r from-brand-500 via-accent-500 to-brand-500 bg-clip-text text-black">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 relative">
+                <img src="/icon-transparent.svg" alt="YourWall Logo" className="w-full h-full object-contain" />
+              </div>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-2 bg-gradient-to-r from-brand-500 via-accent-500 to-brand-500 bg-clip-text text-transparent">
               Create New Space
             </h1>
-            <p className="text-brand-900/80">Set up your message wall</p>
+            <p className="text-brand-900/90">Set up your message wall</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -209,7 +214,7 @@ export default function CreateSpacePage() {
                 disabled={isSubmitting}
                 autoFocus
               />
-              <p className="text-xs text-brand-900/70 mt-1">
+              <p className="text-xs text-brand-900/80 mt-1">
                 This will be displayed as the main heading of your space
               </p>
             </div>
@@ -283,7 +288,7 @@ export default function CreateSpacePage() {
               <label className="block text-sm font-medium text-brand-900 mb-2">
                 Predefined Filter Groups
               </label>
-              <p className="text-xs text-brand-900/70 mb-3">
+              <p className="text-xs text-brand-900/80 mb-3">
                 Common recipients people can quickly select when writing a message
               </p>
               <div className="flex gap-2 mb-3">
@@ -371,7 +376,7 @@ export default function CreateSpacePage() {
               </div>
               <div className="flex justify-between items-start mt-2">
                 <div>
-                  <p className="text-xs text-brand-900/70">
+                  <p className="text-xs text-brand-900/80">
                     This is your unique link. Must be 3-20 alphanumeric characters.
                   </p>
                   {isValidatingCode && (

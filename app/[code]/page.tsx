@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Sparkles, Heart, Mail, Share2, PlusCircle } from 'lucide-react';
+import { Sparkles, Heart, Mail, Share2, PlusCircle, ArrowRight } from 'lucide-react';
+import NextImage from 'next/image';
 import MessageComposer from '@/components/MessageComposer';
 import MessageCard from '@/components/MessageCard';
 import FilterBar from '@/components/FilterBar';
@@ -29,6 +30,7 @@ export default function SpacePage() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isRandomViewerOpen, setIsRandomViewerOpen] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [copiedState, setCopiedState] = useState<'space' | string | null>(null);
 
   // Load space configuration
   useEffect(() => {
@@ -66,26 +68,23 @@ export default function SpacePage() {
   };
 
   const handleShareSpace = async () => {
-    const shareData = {
-      title: space?.title || 'YourWall',
-      text: `Join the conversation at ${space?.title || 'this message wall'}!`,
-      url: window.location.href,
-    };
+    try {
+      await navigator.clipboard.writeText(window.location.href.split('#')[0]);
+      setCopiedState('space');
+      setTimeout(() => setCopiedState(null), 2000);
+    } catch (err) {
+      console.error('Error copying link:', err);
+    }
+  };
 
-    if (navigator.share && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        console.error('Error sharing:', err);
-      }
-    } else {
-      // Fallback: Copy to clipboard
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        alert('Link copied to clipboard!');
-      } catch (err) {
-        console.error('Error copying to clipboard:', err);
-      }
+  const handleShareMessage = async (messageId: string) => {
+    try {
+      const url = `${window.location.href.split('#')[0]}#message-${messageId}`;
+      await navigator.clipboard.writeText(url);
+      setCopiedState(messageId);
+      setTimeout(() => setCopiedState(null), 2000);
+    } catch (err) {
+      console.error('Error copying message link:', err);
     }
   };
 
@@ -184,6 +183,23 @@ export default function SpacePage() {
 
     return sorted;
   }, [selectedFilter, selectedSort, allMessages]);
+
+  // Handle auto-scroll to deep-linked message
+  useEffect(() => {
+    if (!isLoading && window.location.hash) {
+      const id = window.location.hash.slice(1); // remove #
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-4', 'ring-brand-400/50', 'ring-offset-4', 'rounded-2xl');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-brand-400/50', 'ring-offset-4');
+          }, 3000);
+        }, 500);
+      }
+    }
+  }, [isLoading]);
 
   const handleRandomCard = useCallback(() => {
     if (filteredMessages.length === 0) return;
@@ -349,10 +365,10 @@ export default function SpacePage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleShareSpace}
-              className="px-6 py-2 rounded-full glass border border-white/40 text-brand-900/80 font-medium flex items-center gap-2 hover:bg-white/40 transition-all shadow-sm"
+              className="px-4 py-1.5 rounded-full glass border border-white/40 text-brand-900/70 text-sm font-medium flex items-center gap-1.5 hover:bg-white/40 transition-all shadow-sm"
             >
-              <Share2 className="w-4 h-4" />
-              Share This Space
+              <Share2 className="w-3.5 h-3.5" />
+              {copiedState === 'space' ? 'Link Copied!' : 'Share This Space'}
             </motion.button>
           </div>
 
@@ -360,7 +376,7 @@ export default function SpacePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-xl text-gray-600 font-medium mb-4 max-w-2xl mx-auto"
+            className="text-xl text-brand-900/80 font-medium mb-4 max-w-2xl mx-auto"
           >
             {space.description || 'Share your thoughts and connect with others'}
           </motion.p>
@@ -369,7 +385,7 @@ export default function SpacePage() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.6 }}
-            className="flex items-center justify-center gap-2 text-sm text-gray-500"
+            className="flex items-center justify-center gap-2 text-sm text-brand-900/70"
           >
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             <span>Live conversation space</span>
@@ -424,13 +440,13 @@ export default function SpacePage() {
             >
               <Mail className="w-24 h-24" style={{ color: primaryColor }} />
             </motion.div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            <h2 className="text-3xl font-bold text-brand-900 mb-4">
               Share Your Thoughts First! 💌
             </h2>
-            <p className="text-lg text-gray-600 mb-2 max-w-2xl mx-auto">
+            <p className="text-lg text-brand-900/80 mb-2 max-w-2xl mx-auto">
               To see what others have written, you need to contribute to the message wall first.
             </p>
-            <p className="text-md text-gray-500 max-w-2xl mx-auto">
+            <p className="text-md text-brand-900/60 max-w-2xl mx-auto">
               Write a message above to unlock the full wall of messages from our community!
             </p>
             <motion.div
@@ -464,7 +480,7 @@ export default function SpacePage() {
               className="inline-block w-8 h-8 border-4 border-t-transparent rounded-full"
               style={{ borderColor: primaryColor, borderTopColor: 'transparent' }}
             />
-            <p className="mt-4 text-gray-600">Loading messages...</p>
+            <p className="mt-4 text-brand-900/80">Loading messages...</p>
           </div>
         ) : filteredMessages.length === 0 ? (
           <motion.div
@@ -511,6 +527,8 @@ export default function SpacePage() {
                   message={message}
                   index={index}
                   onClick={() => handleMessageClick(message)}
+                  onShare={() => handleShareMessage(message.id)}
+                  isCopied={copiedState === message.id}
                   availableGroups={availableGroups}
                   spaceCode={spaceCode}
                 />
@@ -527,40 +545,43 @@ export default function SpacePage() {
         transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
         className="relative text-center py-12"
       >
-        <div className="max-w-2xl mx-auto border-t border-surface-200 mt-12 pt-12">
+        <div className="max-w-2xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="mb-12 p-8 rounded-3xl glass-panel relative overflow-hidden group"
+            className="py-8 rounded-2xl relative overflow-hidden group border-t border-surface-200/40"
           >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <PlusCircle className="w-24 h-24" />
-            </div>
-            <h3 className="text-2xl font-bold text-brand-900 mb-2">Create Your Own Wall</h3>
-            <p className="text-brand-900/70 mb-6 max-w-md mx-auto">
-              Loved this experience? You can create your own beautiful message wall for events, parties, or communities in seconds.
+            <h3 className="text-lg font-semibold text-brand-900/80 mb-2">Create Your Own Wall</h3>
+            <p className="text-sm text-brand-900/60 mb-5 max-w-sm mx-auto">
+              Create a beautiful message wall for your own event in seconds.
             </p>
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/create')}
-              className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-brand-500 to-accent-500 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-brand-200 text-brand-700 text-sm font-medium hover:bg-brand-50 hover:border-brand-300 transition-all"
             >
               Get Started for Free
-              <Sparkles className="w-5 h-5" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </motion.button>
           </motion.div>
 
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-accent-600 rounded-lg flex items-center justify-center">
-              <Heart className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-brand-900/80 font-medium">Powered by YourWall</span>
-          </div>
-          <p className="text-sm text-brand-900/60">
-            A modern messaging platform for {space.title}
+          <p className="text-sm text-brand-900/70">
+            A space for {space.title}
           </p>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-10 h-10 flex items-center justify-center">
+              <NextImage
+                src="/icon-transparent.svg"
+                alt="YourWall Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+              />
+            </div>
+            <span className="text-brand-900/80 font-semibold tracking-tight">Powered by YourWall</span>
+          </div>
         </div>
       </motion.footer>
 
@@ -569,6 +590,7 @@ export default function SpacePage() {
         message={selectedMessage}
         isOpen={isShareModalOpen}
         onClose={handleCloseShareModal}
+        spaceTitle={space.title}
       />
 
       {/* Random Card Viewer */}

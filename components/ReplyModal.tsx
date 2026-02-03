@@ -111,7 +111,7 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                         {messageFrom || 'this message'}
                       </span>
                     </h2>
-                    <p className="text-sm text-brand-900/80 mb-6">
+                    <p className="text-sm text-brand-900/90 mb-6">
                       Share your thoughts or appreciation
                     </p>
 
@@ -156,14 +156,14 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                           disabled={isSubmitting}
                         />
                         <div className="flex justify-between items-center text-sm mt-3">
-                          <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-accent-500' : 'text-brand-900/40'}>
+                          <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-accent-500' : 'text-brand-900/70'}>
                             {contentLength > 0 && contentLength < MIN_CHARACTERS
                               ? `${MIN_CHARACTERS - contentLength} more characters needed`
                               : contentLength >= MIN_CHARACTERS
                                 ? `✓ ${contentLength} characters`
                                 : `Minimum ${MIN_CHARACTERS} characters`}
                           </div>
-                          <div className={charactersRemaining < 50 ? 'text-accent-500' : 'text-brand-900/40'}>
+                          <div className={charactersRemaining < 50 ? 'text-accent-500' : 'text-brand-900/70'}>
                             {charactersRemaining} remaining
                           </div>
                         </div>
@@ -225,10 +225,10 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                     >
                       <CheckCircle className="w-16 h-16 text-green-500" />
                     </motion.div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    <h3 className="text-xl font-bold text-brand-900 mb-2">
                       Reply Sent!
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-brand-900/80">
                       Your reply has been added
                     </p>
                   </motion.div>
