@@ -111,7 +111,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full"
         >
-          <div className="text-center mb-16">
+          <div className="text-center mb-4">
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -185,12 +185,12 @@ export default function Home() {
                     setCode(e.target.value.toLowerCase().trim());
                     setError(null);
                   }}
-                  placeholder="your-space-code"
-                  className="w-full px-6 py-4 rounded-xl bg-surface-50 border-2 border-surface-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 focus:outline-none transition-all duration-300 placeholder:text-surface-400 text-center text-lg font-medium focus-modern text-brand-900"
+                  placeholder="YOUR-SPACE-CODE"
+                  className="w-full px-6 py-4 rounded-xl bg-surface-50 border-2 border-surface-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 focus:outline-none transition-all duration-300 placeholder:text-surface-400 text-center text-lg font-medium focus-modern text-brand-900 uppercase"
                   autoFocus
                   disabled={isLoading}
-                  pattern="[a-z0-9]{3,20}"
-                  title="3-20 lowercase letters and numbers only"
+                  pattern="[a-zA-Z0-9]{3,20}"
+                  title="3-20 letters and numbers only"
                 />
                 <p className="text-xs text-brand-900/80 mt-2 text-center">
                   Enter the unique code for your message space

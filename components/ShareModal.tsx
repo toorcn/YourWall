@@ -371,7 +371,7 @@ export default function ShareModal({ message, isOpen, onClose, spaceTitle }: Sha
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-brand-800 via-brand-600 to-brand-800 bg-clip-text text-transparent drop-shadow-sm tracking-tight text-center leading-tight">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-brand-800 via-brand-600 to-brand-800 bg-clip-text text-black drop-shadow-sm tracking-tight text-center leading-tight uppercase">
                     {spaceTitle || 'YourWall'}
                   </h1>
                 </div>
@@ -435,7 +435,7 @@ export default function ShareModal({ message, isOpen, onClose, spaceTitle }: Sha
                       />
                     </div>
                     <p className="text-sm sm:text-base text-brand-900 font-bold tracking-tight">
-                      {typeof window !== 'undefined' ? window.location.host : 'yourwall.com'}/{message.spaceCode}
+                      {typeof window !== 'undefined' ? window.location.host : 'yourwall.com'}/<span className="uppercase">{message.spaceCode}</span>
                     </p>
                   </div>
                 </div>

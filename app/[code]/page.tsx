@@ -48,6 +48,10 @@ export default function SpacePage() {
         }
         setSpace(spaceData);
         setIsLoadingSpace(false);
+        // Set document title to space name in full caps
+        if (spaceData.title) {
+          document.title = `${spaceData.title.toUpperCase()} | YourWall`;
+        }
       } catch (error) {
         console.error('Error loading space:', error);
         router.push('/');
@@ -347,7 +351,7 @@ export default function SpacePage() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="text-5xl sm:text-7xl font-bold mb-6"
+            className="text-5xl sm:text-7xl font-bold mb-6 uppercase"
             style={{
               background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor}, ${accentColor})`,
               WebkitBackgroundClip: 'text',
@@ -568,7 +572,7 @@ export default function SpacePage() {
           </motion.div>
 
           <p className="text-sm text-brand-900/70">
-            A space for {space.title}
+            A space for <span className="uppercase">{space.title}</span>
           </p>
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="w-10 h-10 flex items-center justify-center">
