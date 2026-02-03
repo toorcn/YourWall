@@ -8,16 +8,16 @@ import { createSpace, validateSpaceCode } from '@/lib/firestore';
 import { SpaceFormData } from '@/lib/types';
 
 const DEFAULT_COLORS = {
-  primary: '#9333ea', // purple-600
-  secondary: '#ec4899', // pink-500
-  accent: '#3b82f6', // blue-500
+  primary: '#6366f1', // brand-500 (Indigo)
+  secondary: '#f43f5e', // accent-500 (Rose)
+  accent: '#a855f7', // brand-400 (Purple-ish)
 };
 
-const DEFAULT_POPULAR_GROUPS = ['Volunteers', 'Committees', 'Attendees', 'Everyone'];
+const DEFAULT_POPULAR_GROUPS = ['General', 'Shoutouts', 'Q&A'];
 
 export default function CreateSpacePage() {
   const router = useRouter();
-  
+
   const [formData, setFormData] = useState<SpaceFormData>({
     code: '',
     title: '',
@@ -103,7 +103,8 @@ export default function CreateSpacePage() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50" />
+        <div className="absolute inset-0 bg-surface-50" />
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-50/50 via-surface-50 to-accent-50/50" />
       </div>
 
       {/* Main Content */}
@@ -111,19 +112,19 @@ export default function CreateSpacePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/30 backdrop-blur-md rounded-3xl p-8 border border-white/40 shadow-xl"
+          className="bg-surface-50/30 backdrop-blur-md rounded-3xl p-8 border border-surface-100/40 shadow-xl"
         >
           <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-2 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-serif font-bold mb-2 bg-gradient-to-r from-brand-500 via-accent-500 to-brand-500 bg-clip-text text-black">
               Create New Space
             </h1>
-            <p className="text-gray-600">Set up your message wall</p>
+            <p className="text-brand-900/80">Set up your message wall</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Space Code */}
             <div>
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="code" className="block text-sm font-medium text-brand-900 mb-2">
                 Space Code <span className="text-red-500">*</span>
               </label>
               <input
@@ -132,17 +133,17 @@ export default function CreateSpacePage() {
                 value={formData.code}
                 onChange={handleCodeChange}
                 placeholder="myevent2025"
-                className="w-full px-4 py-3 rounded-2xl bg-white/50 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500"
+                className="w-full px-4 py-3 rounded-2xl bg-surface-50/50 backdrop-blur-md border border-surface-100/40 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900"
                 required
                 pattern="[a-z0-9]{3,20}"
                 title="3-20 lowercase letters and numbers only"
                 disabled={isSubmitting}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-brand-900/70 mt-1">
                 3-20 characters, lowercase letters and numbers only (no spaces or special characters)
               </p>
               {isValidatingCode && (
-                <p className="text-xs text-blue-500 mt-1">Checking availability...</p>
+                <p className="text-xs text-accent-500 mt-1">Checking availability...</p>
               )}
               {codeError && (
                 <p className="text-xs text-red-500 mt-1">{codeError}</p>
@@ -151,7 +152,7 @@ export default function CreateSpacePage() {
 
             {/* Title */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="title" className="block text-sm font-medium text-brand-900 mb-2">
                 Space Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -160,7 +161,7 @@ export default function CreateSpacePage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="My Event 2025"
-                className="w-full px-4 py-3 rounded-2xl bg-white/50 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500"
+                className="w-full px-4 py-3 rounded-2xl bg-surface-50/50 backdrop-blur-md border border-surface-100/40 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900"
                 required
                 disabled={isSubmitting}
               />
@@ -168,7 +169,7 @@ export default function CreateSpacePage() {
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="description" className="block text-sm font-medium text-brand-900 mb-2">
                 Description (Optional)
               </label>
               <textarea
@@ -177,19 +178,19 @@ export default function CreateSpacePage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Leave a message for each other"
                 rows={3}
-                className="w-full px-4 py-3 rounded-2xl bg-white/50 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500 resize-none"
+                className="w-full px-4 py-3 rounded-2xl bg-surface-50/50 backdrop-blur-md border border-surface-100/40 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900 resize-none"
                 disabled={isSubmitting}
               />
             </div>
 
             {/* Colors */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-brand-900 mb-2">
                 Colors
               </label>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Primary</label>
+                  <label className="block text-xs text-brand-900/80 mb-1">Primary</label>
                   <input
                     type="color"
                     value={formData.colors.primary}
@@ -197,12 +198,12 @@ export default function CreateSpacePage() {
                       ...formData,
                       colors: { ...formData.colors, primary: e.target.value },
                     })}
-                    className="w-full h-10 rounded-lg cursor-pointer"
+                    className="w-full h-10 rounded-lg cursor-pointer border border-surface-200"
                     disabled={isSubmitting}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Secondary</label>
+                  <label className="block text-xs text-brand-900/80 mb-1">Secondary</label>
                   <input
                     type="color"
                     value={formData.colors.secondary}
@@ -210,12 +211,12 @@ export default function CreateSpacePage() {
                       ...formData,
                       colors: { ...formData.colors, secondary: e.target.value },
                     })}
-                    className="w-full h-10 rounded-lg cursor-pointer"
+                    className="w-full h-10 rounded-lg cursor-pointer border border-surface-200"
                     disabled={isSubmitting}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Accent</label>
+                  <label className="block text-xs text-brand-900/80 mb-1">Accent</label>
                   <input
                     type="color"
                     value={formData.colors.accent}
@@ -223,7 +224,7 @@ export default function CreateSpacePage() {
                       ...formData,
                       colors: { ...formData.colors, accent: e.target.value },
                     })}
-                    className="w-full h-10 rounded-lg cursor-pointer"
+                    className="w-full h-10 rounded-lg cursor-pointer border border-surface-200"
                     disabled={isSubmitting}
                   />
                 </div>
@@ -232,7 +233,7 @@ export default function CreateSpacePage() {
 
             {/* Popular Groups */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-brand-900 mb-2">
                 Popular Groups
               </label>
               <div className="flex gap-2 mb-2">
@@ -247,7 +248,7 @@ export default function CreateSpacePage() {
                     }
                   }}
                   placeholder="Add a group"
-                  className="flex-1 px-4 py-2 rounded-xl bg-white/50 backdrop-blur-md border border-white/40 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-500"
+                  className="flex-1 px-4 py-2 rounded-xl bg-surface-50/50 backdrop-blur-md border border-surface-100/40 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900"
                   disabled={isSubmitting}
                 />
                 <motion.button
@@ -255,7 +256,7 @@ export default function CreateSpacePage() {
                   onClick={handleAddGroup}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-4 py-2 rounded-xl bg-purple-300 text-white hover:bg-purple-400 transition-all"
+                  className="px-4 py-2 rounded-xl bg-brand-500 text-white hover:bg-brand-600 transition-all font-medium"
                   disabled={isSubmitting}
                 >
                   <Plus className="w-5 h-5" />
@@ -267,13 +268,13 @@ export default function CreateSpacePage() {
                     key={group}
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 backdrop-blur-md border border-white/40"
+                    className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-50/50 backdrop-blur-md border border-surface-100/40"
                   >
-                    <span className="text-sm text-gray-700">{group}</span>
+                    <span className="text-sm text-brand-900/80">{group}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveGroup(group)}
-                      className="text-gray-500 hover:text-red-500 transition-colors"
+                      className="text-brand-900/40 hover:text-red-500 transition-colors"
                       disabled={isSubmitting}
                     >
                       <X className="w-4 h-4" />
@@ -289,11 +290,10 @@ export default function CreateSpacePage() {
               disabled={isSubmitting || !formData.code.trim() || !formData.title.trim() || !!codeError}
               whileHover={!isSubmitting && formData.code.trim() && formData.title.trim() && !codeError ? { scale: 1.02 } : {}}
               whileTap={!isSubmitting && formData.code.trim() && formData.title.trim() && !codeError ? { scale: 0.98 } : {}}
-              className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${
-                isSubmitting || !formData.code.trim() || !formData.title.trim() || !!codeError
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
-              }`}
+              className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${isSubmitting || !formData.code.trim() || !formData.title.trim() || !!codeError
+                ? 'bg-surface-200 text-surface-400 cursor-not-allowed'
+                : 'bg-gradient-to-r from-brand-500 to-accent-500 text-white shadow-lg hover:shadow-xl'
+                }`}
             >
               {isSubmitting ? (
                 <>
@@ -317,7 +317,7 @@ export default function CreateSpacePage() {
           <div className="mt-6 text-center">
             <a
               href="/"
-              className="text-sm text-gray-600 hover:text-purple-600 transition-colors"
+              className="text-sm text-brand-900/80 hover:text-brand-600 transition-colors"
             >
               ← Back to code entry
             </a>

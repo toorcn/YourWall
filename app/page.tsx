@@ -59,7 +59,7 @@ export default function Home() {
             scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
           }}
         >
-          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-600 rounded-full"></div>
+          <div className="w-full h-full bg-gradient-to-br from-brand-400 to-brand-600 rounded-full"></div>
         </motion.div>
 
         <motion.div
@@ -75,7 +75,7 @@ export default function Home() {
             y: { duration: 6, repeat: Infinity, ease: "easeInOut" }
           }}
         >
-          <div className="w-full h-full bg-gradient-to-br from-pink-400 to-red-500 rounded-full blur-2xl"></div>
+          <div className="w-full h-full bg-gradient-to-br from-accent-400 to-accent-600 rounded-full blur-2xl"></div>
         </motion.div>
 
         <motion.div
@@ -89,15 +89,15 @@ export default function Home() {
             rotate: { duration: 30, repeat: Infinity, ease: "linear" }
           }}
         >
-          <div className="w-full h-full bg-gradient-to-br from-cyan-400 to-blue-600 rounded-full blur-3xl"></div>
+          <div className="w-full h-full bg-gradient-to-br from-brand-300 to-brand-500 rounded-full blur-3xl"></div>
         </motion.div>
 
         {/* Grid pattern overlay */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
             backgroundImage: `
-              linear-gradient(rgba(102, 126, 234, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(102, 126, 234, 0.1) 1px, transparent 1px)
+              linear-gradient(var(--color-brand-500) 0.5px, transparent 0.5px),
+              linear-gradient(90deg, var(--color-brand-500) 0.5px, transparent 0.5px)
             `,
             backgroundSize: '50px 50px'
           }}></div>
@@ -119,7 +119,7 @@ export default function Home() {
               className="flex justify-center mb-8"
             >
               <div className="relative">
-                <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl pulse-glow overflow-hidden relative">
+                <div className="w-32 h-32 bg-gradient-to-br from-brand-500 to-brand-600 rounded-3xl flex items-center justify-center shadow-2xl pulse-glow overflow-hidden relative">
                   <NextImage
                     src="/brand-icon.webp"
                     alt="YourWall Logo"
@@ -131,7 +131,7 @@ export default function Home() {
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                  className="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center z-10"
+                  className="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-br from-accent-400 to-accent-500 rounded-full flex items-center justify-center z-10"
                 >
                   <Sparkles className="w-5 h-5 text-white" />
                 </motion.div>
@@ -151,7 +151,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-xl text-gray-600 font-medium mb-2"
+              className="text-xl text-brand-900/70 font-medium mb-2"
             >
               Enter your space code to continue
             </motion.p>
@@ -160,7 +160,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="text-sm text-gray-500"
+              className="text-sm text-brand-900/70"
             >
               Join the conversation in your dedicated space
             </motion.p>
@@ -174,7 +174,7 @@ export default function Home() {
           >
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="code" className="block text-sm font-medium text-brand-900 mb-2">
                   Space Code
                 </label>
                 <input
@@ -186,13 +186,13 @@ export default function Home() {
                     setError(null);
                   }}
                   placeholder="your-space-code"
-                  className="w-full px-6 py-4 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 text-center text-lg font-medium focus-modern"
+                  className="w-full px-6 py-4 rounded-xl bg-surface-50 border-2 border-surface-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 focus:outline-none transition-all duration-300 placeholder:text-surface-400 text-center text-lg font-medium focus-modern text-brand-900"
                   autoFocus
                   disabled={isLoading}
                   pattern="[a-z0-9]{3,20}"
                   title="3-20 lowercase letters and numbers only"
                 />
-                <p className="text-xs text-gray-500 mt-2 text-center">
+                <p className="text-xs text-brand-900/70 mt-2 text-center">
                   Enter the unique code for your message space
                 </p>
               </div>
@@ -213,8 +213,8 @@ export default function Home() {
                 whileHover={!isLoading && code.trim() ? { scale: 1.02 } : {}}
                 whileTap={!isLoading && code.trim() ? { scale: 0.98 } : {}}
                 className={`w-full px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 btn-modern ${isLoading || !code.trim()
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl'
+                  ? 'bg-surface-200 text-surface-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-brand-500 to-brand-600 text-black shadow-xl hover:shadow-2xl'
                   }`}
               >
                 {isLoading ? (
@@ -236,15 +236,15 @@ export default function Home() {
               </motion.button>
             </form>
 
-            <div className="mt-10 pt-8 border-t border-gray-200">
-              <p className="text-center text-sm text-gray-600 mb-6">
+            <div className="mt-10 pt-8 border-t border-surface-200">
+              <p className="text-center text-sm text-brand-900/80 mb-6">
                 Don't have a space code yet?
               </p>
               <motion.a
                 href="/create"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="block w-full px-6 py-4 rounded-xl font-medium text-center bg-white border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 text-gray-700 hover:text-blue-600 shadow-sm hover:shadow-md"
+                className="block w-full px-6 py-4 rounded-xl font-medium text-center bg-white border-2 border-surface-200 hover:border-brand-400 hover:bg-brand-50 transition-all duration-300 text-brand-700 hover:text-brand-600 shadow-sm hover:shadow-md"
               >
                 Create New Space
               </motion.a>

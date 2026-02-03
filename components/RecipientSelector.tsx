@@ -91,20 +91,20 @@ export default function RecipientSelector({
     <div className="relative">
       {/* Input Field */}
       <div className="relative">
-        <div className="flex flex-wrap gap-2 p-5 rounded-2xl bg-white/30 backdrop-blur-md border border-white/40 focus-within:border-purple-300 transition-all">
+        <div className="flex flex-wrap gap-2 p-5 rounded-2xl bg-surface-50/30 backdrop-blur-md border border-surface-100/40 focus-within:border-brand-300 transition-all">
           {selectedRecipients.map((recipient) => (
             <motion.div
               key={recipient}
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-300/25 to-pink-300/25 backdrop-blur-sm border border-white/40 text-sm"
+              className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-brand-300/25 to-accent-300/25 backdrop-blur-sm border border-surface-100/40 text-sm text-brand-900"
             >
               <span>{recipient}</span>
               <button
                 type="button"
                 onClick={() => removeRecipient(recipient)}
-                className="hover:scale-110 transition-transform"
+                className="hover:scale-110 transition-transform text-brand-900/60 hover:text-brand-900"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -119,7 +119,7 @@ export default function RecipientSelector({
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholder={selectedRecipients.length === 0 ? "To: type here to create a group" : "Add more..."}
-            className="flex-1 min-w-[200px] bg-transparent outline-none placeholder:text-gray-500"
+            className="flex-1 min-w-[200px] bg-transparent outline-none placeholder:text-brand-900/60 text-brand-900"
           />
         </div>
         {/* Hints around the text box */}
@@ -131,8 +131,8 @@ export default function RecipientSelector({
               <span
                 key={group.name}
                 className={`text-xs flex items-center gap-1 ${isSelected
-                  ? 'text-purple-400 opacity-60'
-                  : 'text-gray-500 opacity-70'
+                  ? 'text-brand-400 opacity-60'
+                  : 'text-brand-900/50 opacity-70'
                   }`}
               >
                 <Icon className="w-3 h-3" />
@@ -159,7 +159,7 @@ export default function RecipientSelector({
                     key={suggestion}
                     type="button"
                     onClick={() => addRecipient(suggestion)}
-                    className="w-full text-left px-4 py-2 rounded-xl hover:bg-purple-100/50 transition-colors"
+                    className="w-full text-left px-4 py-2 rounded-xl hover:bg-brand-100/50 transition-colors text-brand-900"
                   >
                     {suggestion}
                   </button>
@@ -173,7 +173,7 @@ export default function RecipientSelector({
                 type="button"
                 onClick={handleCreateCustom}
                 onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
-                className="w-full text-left px-4 py-2 rounded-xl hover:bg-purple-100/50 transition-colors border-t border-gray-200 mt-2 pt-2 flex items-center gap-2 text-purple-600 font-medium"
+                className="w-full text-left px-4 py-2 rounded-xl hover:bg-brand-100/50 transition-colors border-t border-surface-200 mt-2 pt-2 flex items-center gap-2 text-brand-600 font-medium"
               >
                 <span>+</span>
                 <span>Create &ldquo;{input.trim()}&rdquo;</span>
@@ -182,7 +182,7 @@ export default function RecipientSelector({
 
             {/* Show "Create custom" hint when input is empty and focused */}
             {input.trim().length === 0 && filteredSuggestions.length === 0 && (
-              <div className="px-4 py-2 text-sm text-gray-500 italic">
+              <div className="px-4 py-2 text-sm text-brand-900/50 italic">
                 Start typing to create a custom recipient...
               </div>
             )}

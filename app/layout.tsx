@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Open_Sans, Playfair_Display } from "next/font/google";
+import { Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const openSans = Open_Sans({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-opensans",
+  variable: "--font-outfit",
 });
 
 const playfair = Playfair_Display({
@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${openSans.variable} ${playfair.variable} font-sans antialiased`}>
+      <body className={`${outfit.variable} ${playfair.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>

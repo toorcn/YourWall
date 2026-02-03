@@ -120,12 +120,12 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   >
-                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                    <label className="block text-sm font-medium text-brand-900 mb-4">
                       Step 1: Who are you? (Optional)
                     </label>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-900/40 pointer-events-none">
                           <NextImage
                             src="/avatar-3d.png"
                             alt="User"
@@ -139,7 +139,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                           value={formData.from}
                           onChange={(e) => setFormData({ ...formData, from: e.target.value })}
                           placeholder="Your name, department, role, or stay anonymous"
-                          className="w-full pl-12 pr-6 py-5 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed focus-modern"
+                          className="w-full pl-12 pr-6 py-5 rounded-xl bg-surface-50 border-2 border-surface-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 focus:outline-none transition-all duration-300 placeholder:text-brand-900/50 disabled:opacity-50 disabled:cursor-not-allowed focus-modern text-brand-900"
                           autoFocus
                           disabled={step1Skipped}
                         />
@@ -152,14 +152,14 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                           animate={{ opacity: 1, scale: 1 }}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-4 py-3 rounded-2xl bg-white/40 backdrop-blur-md border border-white/40 hover:border-purple-300 transition-all text-gray-700 font-medium flex items-center gap-2"
+                          className="px-4 py-3 rounded-2xl bg-surface-50/40 backdrop-blur-md border border-surface-50/40 hover:border-brand-300 transition-all text-brand-900/80 font-medium flex items-center gap-2"
                         >
                           Skip <ArrowRight className="w-4 h-4" />
                         </motion.button>
                       )}
                     </div>
                     {step1Skipped && (
-                      <p className="text-xs text-gray-500 mt-1 italic">Continuing as Anonymous</p>
+                      <p className="text-xs text-brand-900/50 mt-1 italic">Continuing as Anonymous</p>
                     )}
                   </motion.div>
                 )}
@@ -174,7 +174,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                   >
-                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                    <label className="block text-sm font-medium text-brand-900 mb-4">
                       Step 2: Who is this message for? *
                     </label>
                     <RecipientSelector
@@ -196,7 +196,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                     transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                     className="relative space-y-4"
                   >
-                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                    <label className="block text-sm font-medium text-brand-900 mb-4">
                       Step 3: Write your message *
                     </label>
                     <textarea
@@ -204,17 +204,17 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       placeholder="Share your thoughts, appreciation, or encouragement..."
                       rows={12}
-                      className="w-full px-6 py-5 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 resize-none overflow-y-auto focus-modern"
+                      className="w-full px-6 py-5 rounded-xl bg-surface-50 border-2 border-surface-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 focus:outline-none transition-all duration-300 placeholder:text-brand-900/50 resize-none overflow-y-auto focus-modern text-brand-900"
                     />
                     <div className="flex justify-between items-center text-sm mt-3 px-2">
-                      <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-orange-500' : 'text-gray-500'}>
+                      <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-accent-500' : 'text-brand-900/50'}>
                         {contentLength > 0 && contentLength < MIN_CHARACTERS
                           ? `${MIN_CHARACTERS - contentLength} more characters needed (min ${MIN_CHARACTERS})`
                           : contentLength >= MIN_CHARACTERS
                             ? `✓ ${contentLength} characters`
                             : `Minimum ${MIN_CHARACTERS} characters`}
                       </div>
-                      <div className={charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}>
+                      <div className={charactersRemaining < 50 ? 'text-accent-500' : 'text-brand-900/50'}>
                         {charactersRemaining} remaining
                       </div>
                     </div>
@@ -234,8 +234,8 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                     whileHover={isValid ? { scale: 1.02 } : {}}
                     whileTap={isValid ? { scale: 0.98 } : {}}
                     className={`w-full px-8 py-5 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 btn-modern ${isValid
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-xl hover:shadow-2xl'
+                      : 'bg-surface-200 text-surface-400 cursor-not-allowed'
                       }`}
                   >
                     {isSubmitting ? (

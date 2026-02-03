@@ -420,7 +420,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
 
                 {/* Footer */}
                 <div className="mt-6 sm:mt-8 text-center">
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-1">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-brand-600 via-accent-600 to-brand-600 bg-clip-text text-transparent mb-1">
                     YourWall
                   </p>
                   <p className="text-sm sm:text-base text-gray-700 font-medium">Message Wall</p>
@@ -438,7 +438,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 whileTap={{ scale: 0.95 }}
                 onClick={handleDownload}
                 disabled={isDownloading}
-                className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
+                className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-brand-500 to-accent-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 <Download className="w-5 h-5" />
                 {isDownloading ? 'Downloading...' : 'Download Image'}

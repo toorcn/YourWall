@@ -104,25 +104,25 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2 pr-8 flex items-center gap-2">
+                    <h2 className="text-2xl font-bold text-brand-900 mb-2 pr-8 flex items-center gap-2">
                       Reply to
-                      <span className="inline-flex items-center gap-2 text-purple-600">
+                      <span className="inline-flex items-center gap-2 text-brand-600">
                         {messageFrom && <NextImage src="/avatar-3d.png" alt="User" width={24} height={24} className="w-6 h-6 object-contain opacity-80" />}
                         {messageFrom || 'this message'}
                       </span>
                     </h2>
-                    <p className="text-sm text-gray-600 mb-6">
+                    <p className="text-sm text-brand-900/80 mb-6">
                       Share your thoughts or appreciation
                     </p>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                       {/* From Field */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                        <label className="block text-sm font-medium text-brand-900/80 mb-3">
                           Your name (Optional)
                         </label>
                         <div className="relative">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-900/40 pointer-events-none">
                             <NextImage
                               src="/avatar-3d.png"
                               alt="User"
@@ -136,7 +136,7 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                             value={formData.from}
                             onChange={(e) => setFormData({ ...formData, from: e.target.value })}
                             placeholder="Your name or stay anonymous"
-                            className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
+                            className="w-full pl-12 pr-6 py-4 rounded-2xl bg-surface-50/60 backdrop-blur-sm border border-surface-200 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900"
                             disabled={isSubmitting}
                           />
                         </div>
@@ -144,7 +144,7 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
 
                       {/* Content Field */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                        <label className="block text-sm font-medium text-brand-900/80 mb-3">
                           Your reply *
                         </label>
                         <textarea
@@ -152,18 +152,18 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                           onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                           placeholder="Write your reply..."
                           rows={6}
-                          className="w-full px-6 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400 resize-none"
+                          className="w-full px-6 py-4 rounded-2xl bg-surface-50/60 backdrop-blur-sm border border-surface-200 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900 resize-none"
                           disabled={isSubmitting}
                         />
                         <div className="flex justify-between items-center text-sm mt-3">
-                          <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-orange-500' : 'text-gray-500'}>
+                          <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-accent-500' : 'text-brand-900/40'}>
                             {contentLength > 0 && contentLength < MIN_CHARACTERS
                               ? `${MIN_CHARACTERS - contentLength} more characters needed`
                               : contentLength >= MIN_CHARACTERS
                                 ? `✓ ${contentLength} characters`
                                 : `Minimum ${MIN_CHARACTERS} characters`}
                           </div>
-                          <div className={charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}>
+                          <div className={charactersRemaining < 50 ? 'text-accent-500' : 'text-brand-900/40'}>
                             {charactersRemaining} remaining
                           </div>
                         </div>
@@ -186,8 +186,8 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                         whileHover={isValid ? { scale: 1.02 } : {}}
                         whileTap={isValid ? { scale: 0.98 } : {}}
                         className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${isValid
-                          ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
-                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          ? 'bg-gradient-to-r from-brand-500 to-accent-500 text-white shadow-lg hover:shadow-xl'
+                          : 'bg-surface-200 text-surface-400 cursor-not-allowed'
                           }`}
                       >
                         {isSubmitting ? (

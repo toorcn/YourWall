@@ -17,7 +17,7 @@ export default function SpacePage() {
   const params = useParams();
   const router = useRouter();
   const spaceCode = (params.code as string)?.toLowerCase().trim() || '';
-  
+
   const [space, setSpace] = useState<Space | null>(null);
   const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -68,7 +68,7 @@ export default function SpacePage() {
   // Check if user has submitted a message
   useEffect(() => {
     if (!spaceCode) return;
-    
+
     const checkSubmissionStatus = () => {
       const hasSubmittedMessage = localStorage.getItem(`hasSubmittedMessage_${spaceCode}`) === 'true';
       setHasSubmitted(hasSubmittedMessage);
@@ -81,7 +81,7 @@ export default function SpacePage() {
     };
 
     window.addEventListener('messageSubmitted', handleMessageSubmitted);
-    
+
     return () => {
       window.removeEventListener('messageSubmitted', handleMessageSubmitted);
     };
@@ -123,23 +123,23 @@ export default function SpacePage() {
   // Filter and sort messages client-side based on selected filter and sort
   const filteredMessages = useMemo(() => {
     let filtered = allMessages;
-    
+
     // Apply recipient filter
     if (selectedFilter !== 'all') {
       const recipientsInMessages = new Set<string>();
       allMessages.forEach(msg => msg.to.forEach(r => recipientsInMessages.add(r)));
-      
+
       const matchingRecipient = Array.from(recipientsInMessages).find(
         r => r.toLowerCase() === selectedFilter
       );
-      
+
       if (matchingRecipient) {
         filtered = allMessages.filter(msg => msg.to.includes(matchingRecipient));
       } else {
         return [];
       }
     }
-    
+
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       switch (selectedSort) {
@@ -157,7 +157,7 @@ export default function SpacePage() {
           return b.timestamp.toMillis() - a.timestamp.toMillis();
       }
     });
-    
+
     return sorted;
   }, [selectedFilter, selectedSort, allMessages]);
 
@@ -178,10 +178,10 @@ export default function SpacePage() {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
       : null;
   };
 
@@ -195,7 +195,7 @@ export default function SpacePage() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-8 h-8 border-4 border-purple-400 border-t-transparent rounded-full"
+          className="w-8 h-8 border-4 border-brand-400 border-t-transparent rounded-full"
         />
       </div>
     );
@@ -375,11 +375,11 @@ export default function SpacePage() {
             className="text-center py-16 px-6"
           >
             <motion.div
-              animate={{ 
+              animate={{
                 scale: [1, 1.1, 1],
                 rotate: [0, 5, -5, 0]
               }}
-              transition={{ 
+              transition={{
                 duration: 3,
                 repeat: Infinity,
                 ease: "easeInOut"
@@ -408,7 +408,7 @@ export default function SpacePage() {
               Let&apos;s get started!
               <Sparkles className="w-5 h-5" />
             </motion.div>
-            
+
             {/* Inconspicuous browse button */}
             <motion.button
               initial={{ opacity: 0 }}
@@ -483,12 +483,12 @@ export default function SpacePage() {
       >
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-accent-600 rounded-lg flex items-center justify-center">
               <Heart className="w-4 h-4 text-white" />
             </div>
-            <span className="text-gray-600 font-medium">Powered by YourWall</span>
+            <span className="text-brand-900/80 font-medium">Powered by YourWall</span>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-brand-900/60">
             A modern messaging platform for {space.title}
           </p>
         </div>

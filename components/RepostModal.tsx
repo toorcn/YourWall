@@ -187,30 +187,30 @@ export default function RepostModal({
                       className="space-y-4 sm:space-y-6 flex-1 flex flex-col"
                     >
                       <div className="flex items-center gap-2 mb-2 pr-8 sm:pr-12">
-                        <Repeat2 className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
+                        <Repeat2 className="w-6 h-6 sm:w-8 sm:h-8 text-brand-600" />
+                        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-brand-900">
                           Repost Message
                         </h2>
                       </div>
-                      <p className="text-sm sm:text-base text-gray-600">
+                      <p className="text-sm sm:text-base text-brand-900/80">
                         Share this message with others and optionally add your own comment
                       </p>
 
                       {/* Original Message Preview */}
-                      <div className="p-4 sm:p-6 lg:p-8 rounded-2xl bg-gray-50/80 border border-gray-200">
+                      <div className="p-4 sm:p-6 lg:p-8 rounded-2xl bg-surface-50/80 border border-surface-200">
                         <div className="flex items-center justify-between mb-3 sm:mb-4">
-                          <span className="text-xs sm:text-sm font-medium text-gray-600">
+                          <span className="text-xs sm:text-sm font-medium text-brand-900/80">
                             Original message
                           </span>
-                          <span className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
+                          <span className="text-xs sm:text-sm text-brand-900/50 flex items-center gap-1.5">
                             From:
-                            <span className="inline-flex items-center gap-1.5 text-purple-600 font-medium">
+                            <span className="inline-flex items-center gap-1.5 text-brand-600 font-medium">
                               <NextImage src="/avatar-3d.png" alt="User" width={16} height={16} className="w-4 h-4 object-contain opacity-80" />
                               {message.from || 'Anonymous'}
                             </span>
                           </span>
                         </div>
-                        <p className="text-sm sm:text-base lg:text-lg text-gray-700 whitespace-pre-wrap line-clamp-3">
+                        <p className="text-sm sm:text-base lg:text-lg text-brand-900 whitespace-pre-wrap line-clamp-3">
                           {message.content}
                         </p>
                       </div>
@@ -218,11 +218,11 @@ export default function RepostModal({
                       <form onSubmit={handleSubmit} className="space-y-8">
                         {/* From Field */}
                         <div>
-                          <label className="block text-sm sm:text-base font-medium text-gray-700 mb-4">
+                          <label className="block text-sm sm:text-base font-medium text-brand-900 mb-4">
                             Your name (Optional)
                           </label>
                           <div className="relative">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-900/40 pointer-events-none">
                               <NextImage
                                 src="/avatar-3d.png"
                                 alt="User"
@@ -236,7 +236,7 @@ export default function RepostModal({
                               value={formData.from}
                               onChange={(e) => setFormData({ ...formData, from: e.target.value })}
                               placeholder="Your name or stay anonymous"
-                              className="w-full pl-12 pr-5 sm:pr-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
+                              className="w-full pl-12 pr-5 sm:pr-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-surface-50/60 backdrop-blur-sm border border-surface-200 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900"
                               disabled={isSubmitting}
                             />
                           </div>
@@ -244,7 +244,7 @@ export default function RepostModal({
 
                         {/* Recipients Field */}
                         <div>
-                          <label className="block text-sm sm:text-base font-medium text-gray-700 mb-4">
+                          <label className="block text-sm sm:text-base font-medium text-brand-900 mb-4">
                             Share with *
                           </label>
                           <RecipientSelector
@@ -256,7 +256,7 @@ export default function RepostModal({
 
                         {/* Comment Field */}
                         <div>
-                          <label className="block text-sm sm:text-base font-medium text-gray-700 mb-4">
+                          <label className="block text-sm sm:text-base font-medium text-brand-900 mb-4">
                             Add a comment (Optional)
                           </label>
                           <textarea
@@ -264,11 +264,11 @@ export default function RepostModal({
                             onChange={(e) => setFormData({ ...formData, repostComment: e.target.value })}
                             placeholder="Add your thoughts about this message..."
                             rows={6}
-                            className="w-full px-5 sm:px-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400 resize-none"
+                            className="w-full px-5 sm:px-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-surface-50/60 backdrop-blur-sm border border-surface-200 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900 resize-none"
                             disabled={isSubmitting}
                           />
                           <div className="flex justify-end items-center text-sm sm:text-base mt-2">
-                            <div className={commentLength > MAX_COMMENT_CHARACTERS ? 'text-red-500' : 'text-gray-500'}>
+                            <div className={commentLength > MAX_COMMENT_CHARACTERS ? 'text-red-500' : 'text-brand-900/40'}>
                               {commentLength} / {MAX_COMMENT_CHARACTERS}
                             </div>
                           </div>
@@ -291,8 +291,8 @@ export default function RepostModal({
                           whileHover={isValid ? { scale: 1.02 } : {}}
                           whileTap={isValid ? { scale: 0.98 } : {}}
                           className={`w-full px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${isValid
-                            ? 'bg-gradient-to-r from-purple-300 to-pink-300 text-white shadow-lg hover:shadow-xl'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            ? 'bg-gradient-to-r from-brand-500 to-accent-500 text-white shadow-lg hover:shadow-xl'
+                            : 'bg-surface-200 text-surface-400 cursor-not-allowed'
                             }`}
                         >
                           {isSubmitting ? (

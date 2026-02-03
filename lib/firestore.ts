@@ -17,7 +17,7 @@ import { db } from './firebase';
 import { Message, Group, MessageFormData, Reply, ReplyFormData, Space, SpaceFormData } from './types';
 
 // Predefined popular groups
-const POPULAR_GROUPS = ['Volunteers', 'Committees', 'Attendees', 'Everyone'];
+const POPULAR_GROUPS = ['General', 'Shoutouts', 'Q&A'];
 
 // Pastel colors for message cards
 const MESSAGE_COLORS = [
@@ -42,29 +42,29 @@ const getRandomColor = () => {
 export const validateSpaceCode = async (code: string): Promise<{ valid: boolean; available?: boolean; error?: string }> => {
   // Validate format: alphanumeric, lowercase, 3-20 characters
   const codeRegex = /^[a-z0-9]{3,20}$/;
-  
+
   if (!code || code.trim().length === 0) {
     return { valid: false, error: 'Space code is required' };
   }
-  
+
   const normalizedCode = code.toLowerCase().trim();
-  
+
   if (!codeRegex.test(normalizedCode)) {
-    return { 
-      valid: false, 
-      error: 'Space code must be 3-20 characters, lowercase letters and numbers only (no spaces or special characters)' 
+    return {
+      valid: false,
+      error: 'Space code must be 3-20 characters, lowercase letters and numbers only (no spaces or special characters)'
     };
   }
-  
+
   // Check if code already exists
   try {
     const spaceRef = doc(db, 'spaces', normalizedCode);
     const spaceSnap = await getDoc(spaceRef);
-    
+
     if (spaceSnap.exists()) {
       return { valid: true, available: false, error: 'This space code is already taken' };
     }
-    
+
     return { valid: true, available: true };
   } catch (error) {
     console.error('Error validating space code:', error);
@@ -78,7 +78,7 @@ export const getSpaceByCode = async (code: string): Promise<Space | null> => {
     const normalizedCode = code.toLowerCase().trim();
     const spaceRef = doc(db, 'spaces', normalizedCode);
     const spaceSnap = await getDoc(spaceRef);
-    
+
     if (spaceSnap.exists()) {
       return {
         code: spaceSnap.id,
@@ -96,13 +96,13 @@ export const getSpaceByCode = async (code: string): Promise<Space | null> => {
 export const createSpace = async (spaceData: SpaceFormData): Promise<void> => {
   try {
     const normalizedCode = spaceData.code.toLowerCase().trim();
-    
+
     // Validate code
     const validation = await validateSpaceCode(normalizedCode);
     if (!validation.valid || !validation.available) {
       throw new Error(validation.error || 'Invalid or unavailable space code');
     }
-    
+
     const space: Omit<Space, 'code'> = {
       title: spaceData.title,
       colors: spaceData.colors,
@@ -117,7 +117,7 @@ export const createSpace = async (spaceData: SpaceFormData): Promise<void> => {
       ...(spaceData.description && { description: spaceData.description }),
       ...(spaceData.createdBy && { createdBy: spaceData.createdBy }),
     };
-    
+
     const spaceRef = doc(db, 'spaces', normalizedCode);
     await setDoc(spaceRef, space);
   } catch (error) {
@@ -148,14 +148,14 @@ export const updateSpaceStats = async (
     if (updates.totalLikes !== undefined) {
       statsUpdate['stats.totalLikes'] = updates.totalLikes;
     }
-    
+
     // Firestore doesn't support nested field updates with dot notation in updateDoc
     // We need to get the current stats and update them
     const spaceSnap = await getDoc(spaceRef);
     if (spaceSnap.exists()) {
       const currentData = spaceSnap.data() as Space;
       const currentStats = currentData.stats || { messageCount: 0, groupCount: 0, totalLikes: 0 };
-      
+
       await updateDoc(spaceRef, {
         stats: {
           messageCount: updates.messageCount ?? currentStats.messageCount,
@@ -189,14 +189,14 @@ export const incrementSpaceStats = async (
     if (increments.totalLikes !== undefined) {
       statsUpdate['stats.totalLikes'] = increment(increments.totalLikes);
     }
-    
+
     // Firestore doesn't support nested field increments directly
     // We need to get the current stats and update them
     const spaceSnap = await getDoc(spaceRef);
     if (spaceSnap.exists()) {
       const currentData = spaceSnap.data() as Space;
       const currentStats = currentData.stats || { messageCount: 0, groupCount: 0, totalLikes: 0 };
-      
+
       await updateDoc(spaceRef, {
         stats: {
           messageCount: currentStats.messageCount + (increments.messageCount || 0),
@@ -216,7 +216,7 @@ export const getMessage = async (messageId: string, spaceCode: string): Promise<
   try {
     const messageRef = doc(db, 'messages', messageId);
     const messageSnap = await getDoc(messageRef);
-    
+
     if (messageSnap.exists()) {
       const messageData = messageSnap.data() as Message;
       // Verify message belongs to the space
@@ -243,7 +243,7 @@ export const addMessage = async (messageData: MessageFormData, spaceCode: string
   try {
     // If reposting, fetch the original message content
     let content = messageData.content;
-    
+
     if (messageData.repostedFrom) {
       const originalMessage = await getMessage(messageData.repostedFrom, normalizedSpaceCode);
       if (originalMessage) {
@@ -272,7 +272,7 @@ export const addMessage = async (messageData: MessageFormData, spaceCode: string
     for (const recipient of messageData.to) {
       const groupId = `${normalizedSpaceCode}_${recipient.toLowerCase()}`;
       const groupRef = doc(db, 'groups', groupId);
-      
+
       try {
         await updateDoc(groupRef, {
           messageCount: increment(1),
@@ -305,7 +305,7 @@ export const addMessage = async (messageData: MessageFormData, spaceCode: string
 export const likeMessage = async (messageId: string, spaceCode: string): Promise<void> => {
   const normalizedSpaceCode = spaceCode.toLowerCase().trim();
   const messageRef = doc(db, 'messages', messageId);
-  
+
   // Verify message belongs to space before updating
   const messageSnap = await getDoc(messageRef);
   if (messageSnap.exists()) {
@@ -314,11 +314,11 @@ export const likeMessage = async (messageId: string, spaceCode: string): Promise
       throw new Error('Message does not belong to this space');
     }
   }
-  
+
   await updateDoc(messageRef, {
     likes: increment(1),
   });
-  
+
   // Update space stats
   await incrementSpaceStats(normalizedSpaceCode, {
     totalLikes: 1,
@@ -329,7 +329,7 @@ export const likeMessage = async (messageId: string, spaceCode: string): Promise
 export const unlikeMessage = async (messageId: string, spaceCode: string): Promise<void> => {
   const normalizedSpaceCode = spaceCode.toLowerCase().trim();
   const messageRef = doc(db, 'messages', messageId);
-  
+
   // Verify message belongs to space before updating
   const messageSnap = await getDoc(messageRef);
   if (messageSnap.exists()) {
@@ -338,11 +338,11 @@ export const unlikeMessage = async (messageId: string, spaceCode: string): Promi
       throw new Error('Message does not belong to this space');
     }
   }
-  
+
   await updateDoc(messageRef, {
     likes: increment(-1),
   });
-  
+
   // Update space stats
   await incrementSpaceStats(normalizedSpaceCode, {
     totalLikes: -1,
@@ -357,7 +357,7 @@ export const subscribeToMessages = (
 ): (() => void) => {
   const normalizedSpaceCode = spaceCode.toLowerCase().trim();
   let q;
-  
+
   if (filter && filter !== 'all') {
     // When filtering, fetch without orderBy to avoid requiring a composite index
     // We'll sort in memory instead
@@ -379,7 +379,7 @@ export const subscribeToMessages = (
       id: doc.id,
       ...doc.data(),
     })) as Message[];
-    
+
     // Sort by timestamp descending if we didn't use orderBy in the query
     if (filter && filter !== 'all') {
       messages.sort((a, b) => {
@@ -388,7 +388,7 @@ export const subscribeToMessages = (
         return bTime - aTime;
       });
     }
-    
+
     callback(messages);
   });
 
@@ -418,7 +418,7 @@ export const subscribeToGroups = (
     where('spaceCode', '==', normalizedSpaceCode),
     orderBy('messageCount', 'desc')
   );
-  
+
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const groups: Group[] = snapshot.docs.map((doc) => doc.data() as Group);
     callback(groups);
@@ -431,11 +431,11 @@ export const subscribeToGroups = (
 export const initializePopularGroups = async (spaceCode: string, popularGroups?: string[]): Promise<void> => {
   const normalizedSpaceCode = spaceCode.toLowerCase().trim();
   const groupsToInitialize = popularGroups && popularGroups.length > 0 ? popularGroups : POPULAR_GROUPS;
-  
+
   for (const groupName of groupsToInitialize) {
     const groupId = `${normalizedSpaceCode}_${groupName.toLowerCase()}`;
     const groupRef = doc(db, 'groups', groupId);
-    
+
     try {
       await setDoc(groupRef, {
         id: groupId,
@@ -480,7 +480,7 @@ export const subscribeToReplies = (
       id: doc.id,
       ...doc.data(),
     })) as Reply[];
-    
+
     callback(replies);
   });
 
