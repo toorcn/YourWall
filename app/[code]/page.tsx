@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Sparkles, Heart, Mail } from 'lucide-react';
+import { Sparkles, Heart, Mail, Share2, PlusCircle } from 'lucide-react';
 import MessageComposer from '@/components/MessageComposer';
 import MessageCard from '@/components/MessageCard';
 import FilterBar from '@/components/FilterBar';
@@ -63,6 +63,30 @@ export default function SpacePage() {
   const handleCloseShareModal = () => {
     setIsShareModalOpen(false);
     setTimeout(() => setSelectedMessage(null), 300);
+  };
+
+  const handleShareSpace = async () => {
+    const shareData = {
+      title: space?.title || 'YourWall',
+      text: `Join the conversation at ${space?.title || 'this message wall'}!`,
+      url: window.location.href,
+    };
+
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      } catch (err) {
+        console.error('Error copying to clipboard:', err);
+      }
+    }
   };
 
   // Check if user has submitted a message
@@ -320,6 +344,18 @@ export default function SpacePage() {
             {space.title}
           </motion.h1>
 
+          <div className="flex justify-center mb-6">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleShareSpace}
+              className="px-6 py-2 rounded-full glass border border-white/40 text-brand-900/80 font-medium flex items-center gap-2 hover:bg-white/40 transition-all shadow-sm"
+            >
+              <Share2 className="w-4 h-4" />
+              Share This Space
+            </motion.button>
+          </div>
+
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -436,11 +472,21 @@ export default function SpacePage() {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <p className="text-gray-500 text-lg flex items-center justify-center gap-2">
+            <p className="text-gray-500 text-lg flex flex-col items-center justify-center gap-4">
               {selectedFilter === 'all' ? (
                 <>
-                  No messages yet. Be the first to leave one!
-                  <Mail className="w-5 h-5" style={{ color: secondaryColor }} />
+                  <span className="flex items-center gap-2">
+                    No messages yet. Be the first to leave one!
+                    <Mail className="w-5 h-5" style={{ color: secondaryColor }} />
+                  </span>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => router.push('/create')}
+                    className="text-sm font-medium text-brand-600 hover:text-brand-700 underline underline-offset-4"
+                  >
+                    Or start your own wall →
+                  </motion.button>
                 </>
               ) : (
                 <>No messages for this recipient yet.</>
@@ -481,7 +527,31 @@ export default function SpacePage() {
         transition={{ delay: 0.8, type: "spring", stiffness: 100 }}
         className="relative text-center py-12"
       >
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto border-t border-surface-200 mt-12 pt-12">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="mb-12 p-8 rounded-3xl glass-panel relative overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <PlusCircle className="w-24 h-24" />
+            </div>
+            <h3 className="text-2xl font-bold text-brand-900 mb-2">Create Your Own Wall</h3>
+            <p className="text-brand-900/70 mb-6 max-w-md mx-auto">
+              Loved this experience? You can create your own beautiful message wall for events, parties, or communities in seconds.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push('/create')}
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-to-r from-brand-500 to-accent-500 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+            >
+              Get Started for Free
+              <Sparkles className="w-5 h-5" />
+            </motion.button>
+          </motion.div>
+
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-accent-600 rounded-lg flex items-center justify-center">
               <Heart className="w-4 h-4 text-white" />

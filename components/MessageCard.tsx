@@ -303,6 +303,20 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
                   Repost
                 </span>
               </motion.button>
+              <motion.button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClick();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border bg-surface-50/60 border-surface-50/60 hover:bg-surface-100/80 hover:border-brand-300 cursor-pointer transition-all duration-200"
+                whileTap={{ scale: 0.9 }}
+                title="Share this message"
+              >
+                <Share2 className="w-4 h-4 text-brand-600" />
+                <span className="text-sm font-medium text-brand-900/80 hidden sm:inline">
+                  Share
+                </span>
+              </motion.button>
             </div>
             <motion.button
               onClick={handleLike}

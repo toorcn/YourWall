@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, CheckCircle, Sparkles, Heart, ArrowRight, User, MessageSquare } from 'lucide-react';
+import { Send, CheckCircle, Sparkles, Heart, ArrowRight, User, MessageSquare, Share2 } from 'lucide-react';
 import NextImage from 'next/image';
 import { addMessage } from '@/lib/firestore';
 import { MessageFormData } from '@/lib/types';
@@ -307,23 +307,46 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="flex justify-center gap-2"
+              className="flex flex-col items-center gap-6"
             >
-              {[...Array(5)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ y: 0 }}
-                  animate={{ y: [-10, 0, -10] }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                    ease: 'easeInOut'
-                  }}
-                >
-                  <Heart className="w-6 h-6 text-pink-400 fill-pink-400" />
-                </motion.div>
-              ))}
+              <div className="flex justify-center gap-2">
+                {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ y: 0 }}
+                    animate={{ y: [-10, 0, -10] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                      ease: 'easeInOut'
+                    }}
+                  >
+                    <Heart className="w-6 h-6 text-pink-400 fill-pink-400" />
+                  </motion.div>
+                ))}
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'YourWall',
+                      text: 'Check out this message wall!',
+                      url: window.location.href
+                    }).catch(console.error);
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard!');
+                  }
+                }}
+                className="px-6 py-2 rounded-full glass border border-brand-200 text-brand-700 font-medium flex items-center gap-2 hover:bg-brand-50 transition-all"
+              >
+                <Share2 className="w-4 h-4" />
+                Share this wall
+              </motion.button>
             </motion.div>
           </motion.div>
         )}
