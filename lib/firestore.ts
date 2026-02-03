@@ -72,6 +72,35 @@ export const validateSpaceCode = async (code: string): Promise<{ valid: boolean;
   }
 };
 
+// Find a unique space code by appending numbers if necessary
+export const getUniqueSpaceCode = async (baseCode: string): Promise<string> => {
+  const normalizedBase = baseCode.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+
+  // Basic validation - if empty or too short, return as is (component will handle validation)
+  if (normalizedBase.length < 3) return normalizedBase;
+
+  let currentCode = normalizedBase.substring(0, 20);
+  let counter = 1;
+
+  while (true) {
+    const spaceRef = doc(db, 'spaces', currentCode);
+    const spaceSnap = await getDoc(spaceRef);
+
+    if (!spaceSnap.exists()) {
+      return currentCode;
+    }
+
+    // Code exists, try next one
+    const suffix = counter.toString();
+    const remainingLength = 20 - suffix.length;
+    currentCode = normalizedBase.substring(0, remainingLength) + suffix;
+    counter++;
+
+    // Safety break
+    if (counter > 100) return currentCode;
+  }
+};
+
 // Get space by code
 export const getSpaceByCode = async (code: string): Promise<Space | null> => {
   try {
