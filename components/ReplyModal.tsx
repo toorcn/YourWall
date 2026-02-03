@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, CheckCircle } from 'lucide-react';
+import NextImage from 'next/image';
 import { addReply } from '@/lib/firestore';
 import { ReplyFormData } from '@/lib/types';
 
@@ -103,8 +104,12 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <h2 className="text-2xl font-bold text-gray-800 mb-2 pr-8">
-                      Reply to {messageFrom || 'this message'}
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2 pr-8 flex items-center gap-2">
+                      Reply to
+                      <span className="inline-flex items-center gap-2 text-purple-600">
+                        {messageFrom && <NextImage src="/avatar-3d.png" alt="User" width={24} height={24} className="w-6 h-6 object-contain opacity-80" />}
+                        {messageFrom || 'this message'}
+                      </span>
                     </h2>
                     <p className="text-sm text-gray-600 mb-6">
                       Share your thoughts or appreciation
@@ -116,14 +121,25 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                         <label className="block text-sm font-medium text-gray-700 mb-3">
                           Your name (Optional)
                         </label>
-                        <input
-                          type="text"
-                          value={formData.from}
-                          onChange={(e) => setFormData({ ...formData, from: e.target.value })}
-                          placeholder="Your name or stay anonymous"
-                          className="w-full px-6 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
-                          disabled={isSubmitting}
-                        />
+                        <div className="relative">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <NextImage
+                              src="/avatar-3d.png"
+                              alt="User"
+                              width={20}
+                              height={20}
+                              className="w-5 h-5 object-contain opacity-70"
+                            />
+                          </div>
+                          <input
+                            type="text"
+                            value={formData.from}
+                            onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                            placeholder="Your name or stay anonymous"
+                            className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
+                            disabled={isSubmitting}
+                          />
+                        </div>
                       </div>
 
                       {/* Content Field */}

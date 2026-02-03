@@ -3,7 +3,8 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, Key } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
+import NextImage from 'next/image';
 import { getSpaceByCode } from '@/lib/firestore';
 
 export default function Home() {
@@ -15,24 +16,24 @@ export default function Home() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
-    
+
     if (!code.trim()) {
       setError('Please enter a space code');
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       const normalizedCode = code.toLowerCase().trim();
       const space = await getSpaceByCode(normalizedCode);
-      
+
       if (!space) {
         setError('Space not found. Please check your code and try again.');
         setIsLoading(false);
         return;
       }
-      
+
       // Redirect to the space page
       router.push(`/${normalizedCode}`);
     } catch (err) {
@@ -118,15 +119,21 @@ export default function Home() {
               className="flex justify-center mb-8"
             >
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl pulse-glow">
-                  <Key className="w-10 h-10 text-white" />
+                <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl pulse-glow overflow-hidden relative">
+                  <NextImage
+                    src="/brand-icon.webp"
+                    alt="YourWall Logo"
+                    fill
+                    className="object-cover"
+                    priority
+                  />
                 </div>
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                  className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center"
+                  className="absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center z-10"
                 >
-                  <Sparkles className="w-4 h-4 text-white" />
+                  <Sparkles className="w-5 h-5 text-white" />
                 </motion.div>
               </div>
             </motion.div>
@@ -187,7 +194,7 @@ export default function Home() {
                 />
                 <p className="text-xs text-gray-500 mt-2 text-center">
                   Enter the unique code for your message space
-            </p>
+                </p>
               </div>
 
               {error && (
@@ -205,23 +212,22 @@ export default function Home() {
                 disabled={isLoading || !code.trim()}
                 whileHover={!isLoading && code.trim() ? { scale: 1.02 } : {}}
                 whileTap={!isLoading && code.trim() ? { scale: 0.98 } : {}}
-                className={`w-full px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 btn-modern ${
-                  isLoading || !code.trim()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl'
-                }`}
+                className={`w-full px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 btn-modern ${isLoading || !code.trim()
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl'
+                  }`}
               >
                 {isLoading ? (
                   <>
-            <motion.div
-              animate={{ rotate: 360 }}
+                    <motion.div
+                      animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                     >
                       <Sparkles className="w-5 h-5" />
                     </motion.div>
                     Checking...
-                </>
-              ) : (
+                  </>
+                ) : (
                   <>
                     Enter Space
                     <ArrowRight className="w-5 h-5" />

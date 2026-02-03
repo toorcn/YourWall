@@ -1,6 +1,6 @@
 # Quick Start Guide 🚀
 
-Get the KiyokoCon Message Platform running in 5 minutes!
+Get YourWall Message Platform running in 5 minutes!
 
 ## Prerequisites
 

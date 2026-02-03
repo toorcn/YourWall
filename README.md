@@ -1,6 +1,6 @@
-# KiyokoCon 2025 Message Platform 💌
+# YourWall - Message Platform 💌
 
-A beautiful, dreamy message platform where KiyokoCon 2025 attendees can leave heartfelt messages for volunteers, committees, and fellow attendees.
+A beautiful, dreamy message platform where users can leave heartfelt messages for volunteers, committees, attendees, and communities.
 
 ## ✨ Features
 
@@ -188,4 +188,4 @@ MIT License - feel free to use this for your own events!
 
 ## 💜 Made with Love
 
-Created for KiyokoCon 2025 with React, Next.js, Firebase, and lots of pastel gradients.
+Created with React, Next.js, Firebase, and lots of pastel gradients.

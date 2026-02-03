@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, CheckCircle, Sparkles, Heart, ArrowRight } from 'lucide-react';
+import { Send, CheckCircle, Sparkles, Heart, ArrowRight, User, MessageSquare } from 'lucide-react';
+import NextImage from 'next/image';
 import { addMessage } from '@/lib/firestore';
 import { MessageFormData } from '@/lib/types';
 import RecipientSelector from './RecipientSelector';
@@ -107,7 +108,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.4, type: "spring", stiffness: 100 }}
-            className="card-modern"
+            className="card-modern p-6 md:p-8"
           >
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* From Field */}
@@ -123,15 +124,26 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                       Step 1: Who are you? (Optional)
                     </label>
                     <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={formData.from}
-                        onChange={(e) => setFormData({ ...formData, from: e.target.value })}
-                        placeholder="Your name, department, role, or stay anonymous"
-                        className="flex-1 px-6 py-5 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed focus-modern"
-                        autoFocus
-                        disabled={step1Skipped}
-                      />
+                      <div className="relative flex-1">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <NextImage
+                            src="/avatar-3d.png"
+                            alt="User"
+                            width={24}
+                            height={24}
+                            className="w-6 h-6 object-contain opacity-70"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.from}
+                          onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                          placeholder="Your name, department, role, or stay anonymous"
+                          className="w-full pl-12 pr-6 py-5 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed focus-modern"
+                          autoFocus
+                          disabled={step1Skipped}
+                        />
+                      </div>
                       {!formData.from && !step1Skipped && currentStep === 1 && (
                         <motion.button
                           type="button"
@@ -184,31 +196,28 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                     transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                     className="relative space-y-4"
                   >
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-4">
-                        Step 3: Write your message *
-                      </label>
-                      <textarea
-                        value={formData.content}
-                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                        placeholder="Share your thoughts, appreciation, or encouragement..."
-                        rows={12}
-                        className="w-full px-6 py-5 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 resize-none overflow-y-auto focus-modern"
-                      />
-                      <div className="flex justify-between items-center text-sm mt-3">
-                        <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-orange-500' : 'text-gray-500'}>
-                          {contentLength > 0 && contentLength < MIN_CHARACTERS
-                            ? `${MIN_CHARACTERS - contentLength} more characters needed (min ${MIN_CHARACTERS})`
-                            : contentLength >= MIN_CHARACTERS
-                              ? `✓ ${contentLength} characters`
-                              : `Minimum ${MIN_CHARACTERS} characters`}
-                        </div>
-                        <div className={charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}>
-                          {charactersRemaining} remaining
-                        </div>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      Step 3: Write your message *
+                    </label>
+                    <textarea
+                      value={formData.content}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      placeholder="Share your thoughts, appreciation, or encouragement..."
+                      rows={12}
+                      className="w-full px-6 py-5 rounded-xl bg-gray-50 border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 placeholder:text-gray-400 resize-none overflow-y-auto focus-modern"
+                    />
+                    <div className="flex justify-between items-center text-sm mt-3 px-2">
+                      <div className={contentLength > 0 && contentLength < MIN_CHARACTERS ? 'text-orange-500' : 'text-gray-500'}>
+                        {contentLength > 0 && contentLength < MIN_CHARACTERS
+                          ? `${MIN_CHARACTERS - contentLength} more characters needed (min ${MIN_CHARACTERS})`
+                          : contentLength >= MIN_CHARACTERS
+                            ? `✓ ${contentLength} characters`
+                            : `Minimum ${MIN_CHARACTERS} characters`}
+                      </div>
+                      <div className={charactersRemaining < 50 ? 'text-red-500' : 'text-gray-500'}>
+                        {charactersRemaining} remaining
                       </div>
                     </div>
-
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -225,8 +234,8 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                     whileHover={isValid ? { scale: 1.02 } : {}}
                     whileTap={isValid ? { scale: 0.98 } : {}}
                     className={`w-full px-8 py-5 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 btn-modern ${isValid
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:shadow-2xl'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
                   >
                     {isSubmitting ? (

@@ -1,7 +1,7 @@
 # 🚀 Quick Fix Checklist - Upload Timeout Issue
 
 ## Your Configuration
-- ✅ Storage Bucket: `kiyokocon-messages.firebasestorage.app` (CORRECT)
+- ✅ Storage Bucket: `yourwall-messages.firebasestorage.app` (example)
 - ✅ Environment Variable: Set correctly
 - ✅ File Size: 282KB (PERFECT - no compression needed)
 - ✅ Code Updates: All improvements applied
@@ -14,7 +14,7 @@ The timeout is probably caused by **missing or incorrect Storage permissions**.
 
 ### 1. Update Firebase Storage Rules
 
-Go to: https://console.firebase.google.com/project/kiyokocon-messages/storage/rules
+Go to: https://console.firebase.google.com/project/YOUR_PROJECT_ID/storage/rules
 
 Copy and paste these rules:
 

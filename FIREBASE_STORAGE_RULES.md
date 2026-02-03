@@ -1,7 +1,7 @@
 # Firebase Storage Rules Setup
 
 ## Your Storage Bucket
-`gs://kiyokocon-messages.firebasestorage.app`
+`gs://yourwall-messages.firebasestorage.app` (example)
 
 ## Required Storage Rules
 
@@ -10,7 +10,7 @@ To allow image uploads, you need to configure your Firebase Storage rules proper
 ### Step-by-Step Instructions:
 
 1. **Go to Firebase Console**: https://console.firebase.google.com/
-2. Navigate to your project: **kiyokocon-messages**
+2. Navigate to your project: **yourwall-messages** (or your project name)
 3. Click on **Storage** in the left sidebar
 4. Click on the **Rules** tab at the top
 5. Replace the current rules with the following:
@@ -146,7 +146,7 @@ If uploads still fail after configuring rules:
 
 Your images will be stored at:
 - **Path**: `message-images/{timestamp}_{random}.{ext}`
-- **Full URL**: `https://firebasestorage.googleapis.com/v0/b/kiyokocon-messages.firebasestorage.app/o/message-images%2F{filename}?alt=media&token={token}`
+- **Full URL**: `https://firebasestorage.googleapis.com/v0/b/yourwall-messages.firebasestorage.app/o/message-images%2F{filename}?alt=media&token={token}` (example)
 
 The download URLs are automatically generated and include authentication tokens for security.
 

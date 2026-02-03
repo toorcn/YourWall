@@ -1,13 +1,14 @@
 {
-  "name": "YourWall-Mesasge-Board",
+  "name": "yourwall-message-board",
   "version": "1.0.0",
   "private": true,
-  "description": "A dreamy, elegant message platform for KiyokoCon 2025",
+  "description": "YourWall - A beautiful message platform for events and communities",
   "scripts": {
-    "dev": "next dev",
+    "dev": "rm -f .next/dev/lock 2>/dev/null && next dev -p ${PORT:-3000}",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start -p ${PORT:-3000}",
+    "lint": "next lint",
+    "nuke": "pkill -f 'next dev' || true && rm -rf .next"
   },
   "dependencies": {
     "date-fns": "^4.1.0",

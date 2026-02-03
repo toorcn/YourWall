@@ -27,12 +27,12 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
-      
+
       // For iOS Safari
       document.documentElement.style.overflow = 'hidden';
       document.documentElement.style.position = 'fixed';
       document.documentElement.style.width = '100%';
-      
+
       return () => {
         // Restore scroll position
         document.body.style.position = '';
@@ -71,7 +71,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
       } catch {
         // Ignore font loading errors
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Convert all external images to data URLs to avoid CORS issues
@@ -79,26 +79,26 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
       const images = cardRef.current.querySelectorAll('img');
       const imagePromises = Array.from(images).map(async (img) => {
         const htmlImg = img as HTMLImageElement;
-        
+
         // Skip if already a data URL
         if (htmlImg.src.startsWith('data:')) {
           return Promise.resolve();
         }
-        
+
         try {
           console.log('Converting image to data URL:', htmlImg.src);
-          
+
           // Use our API proxy to fetch the image (bypasses CORS)
           const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(htmlImg.src)}`;
-          
+
           const response = await fetch(proxyUrl);
-          
+
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
-          
+
           const blob = await response.blob();
-          
+
           return new Promise<void>((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -123,21 +123,21 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
           throw new Error(`Failed to load image: ${errorMessage}`);
         }
       });
-      
+
       // Wait for ALL images to be converted
       await Promise.all(imagePromises);
-      
+
       // Verify all images are now data URLs
       const allImages = cardRef.current.querySelectorAll('img');
       const nonDataUrlImages = Array.from(allImages).filter((img) => {
         const htmlImg = img as HTMLImageElement;
         return !htmlImg.src.startsWith('data:');
       });
-      
+
       if (nonDataUrlImages.length > 0) {
         throw new Error(`${nonDataUrlImages.length} image(s) could not be converted to data URLs. Please check Firebase Storage CORS configuration.`);
       }
-      
+
       // Wait for images to render with new data URLs
       await new Promise(resolve => setTimeout(resolve, 300));
 
@@ -160,7 +160,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
             // Remove all external stylesheets that might contain oklab
             const linkTags = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
             linkTags.forEach((tag) => tag.remove());
-            
+
             // Remove style tags with oklab
             const styleTags = clonedDoc.querySelectorAll('style');
             styleTags.forEach((tag) => {
@@ -168,7 +168,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 tag.remove();
               }
             });
-            
+
             // Remove backdrop-filter which can cause issues
             const allElements = clonedDoc.querySelectorAll('*');
             allElements.forEach((el) => {
@@ -182,7 +182,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 (htmlEl.style as any).webkitBackdropFilter = 'none';
               }
             });
-            
+
             // Remove white overlay divs that create yellow hue
             // Find all divs with white/transparent backgrounds
             const allDivs = clonedDoc.querySelectorAll('div');
@@ -190,15 +190,15 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
               const htmlDiv = div as HTMLElement;
               const inlineBg = htmlDiv.style.backgroundColor || '';
               const classes = htmlDiv.classList.toString();
-              
+
               // Check if it's an overlay (positioned absolutely with inset-0 or has white bg)
-              const isOverlay = classes.includes('inset-0') || 
-                                htmlDiv.style.position === 'absolute' ||
-                                htmlDiv.style.position === 'fixed';
-              
+              const isOverlay = classes.includes('inset-0') ||
+                htmlDiv.style.position === 'absolute' ||
+                htmlDiv.style.position === 'fixed';
+
               // Remove white overlays with opacity that create yellow tint
-              if (inlineBg.includes('rgba(255, 255, 255') || 
-                  inlineBg.includes('rgb(255, 255, 255')) {
+              if (inlineBg.includes('rgba(255, 255, 255') ||
+                inlineBg.includes('rgb(255, 255, 255')) {
                 if (isOverlay) {
                   // Remove the overlay completely
                   htmlDiv.style.display = 'none';
@@ -207,7 +207,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                   htmlDiv.style.backgroundColor = 'transparent';
                 }
               }
-              
+
               // Also check for any white rgba backgrounds (with any opacity)
               if (inlineBg.includes('rgba') && inlineBg.includes('255') && inlineBg.includes('255')) {
                 if (isOverlay) {
@@ -217,7 +217,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 }
               }
             });
-            
+
             // Ensure images have no background color tint
             const images = clonedDoc.querySelectorAll('img');
             images.forEach((img) => {
@@ -251,7 +251,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
               // Create download link
               const url = URL.createObjectURL(blob);
               const link = document.createElement('a');
-              const fileName = `kiyokocon-message-${message.from || 'anonymous'}-${Date.now()}.png`;
+              const fileName = `yourwall-message-${message.from || 'anonymous'}-${Date.now()}.png`;
               link.download = fileName;
               link.href = url;
               document.body.appendChild(link);
@@ -287,7 +287,7 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
       console.error('Error downloading image:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to download image. Please try again.';
       alert(errorMessage);
-      
+
       // Restore original image sources even on error
       if (cardRef.current) {
         const images = cardRef.current.querySelectorAll('img[data-original-src]');
@@ -339,19 +339,19 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
             </button>
 
             {/* Shareable Card - Mobile-optimized sizing */}
-            <div 
+            <div
               ref={cardRef}
               data-card-content
               className="relative w-full sm:aspect-[3/4] min-h-screen sm:min-h-0 rounded-none sm:rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden"
               style={{
-                backgroundImage: 'url(/kiyokocon-card.png)',
+                backgroundImage: 'url(/yourwall-card.png)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat',
               }}
             >
               {/* Overlay for text readability */}
-              <div 
+              <div
                 className="absolute inset-0"
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.5)',
@@ -364,8 +364,8 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 {/* Logo */}
                 <div className="flex justify-center mb-6 sm:mb-8">
                   <img
-                    src="/KiyokoCon_Logo.png"
-                    alt="KiyokoCon"
+                    src="/brand-icon.webp"
+                    alt="YourWall"
                     className="h-16 sm:h-24 md:h-28 w-auto"
                   />
                 </div>
@@ -374,14 +374,14 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                 <div
                   className="flex-1 flex flex-col justify-start sm:justify-center p-6 sm:p-8 md:p-10 rounded-2xl sm:rounded-3xl backdrop-blur-md border-2 border-white/60 shadow-xl overflow-y-auto sm:overflow-hidden relative"
                   style={{
-                    backgroundImage: 'url(/kiyokocon-card.png)',
+                    backgroundImage: 'url(/yourwall-card.png)',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
                   }}
                 >
                   {/* Overlay for inner card */}
-                  <div 
+                  <div
                     className="absolute inset-0 -z-10"
                     style={{
                       backgroundColor: message.color ? `${message.color}70` : 'rgba(255, 255, 255, 0.7)',
@@ -414,14 +414,14 @@ export default function ShareModal({ message, isOpen, onClose }: ShareModalProps
                     <p className="text-gray-900 text-lg sm:text-2xl md:text-3xl leading-relaxed whitespace-pre-wrap break-words text-center font-semibold max-w-full">
                       &ldquo;{message.content}&rdquo;
                     </p>
-                    
+
                   </div>
                 </div>
 
                 {/* Footer */}
                 <div className="mt-6 sm:mt-8 text-center">
                   <p className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 bg-clip-text text-transparent mb-1">
-                    KiyokoCon 2025
+                    YourWall
                   </p>
                   <p className="text-sm sm:text-base text-gray-700 font-medium">Message Wall</p>
                 </div>

@@ -23,7 +23,7 @@ export interface Group {
 
 export interface Space {
   code: string; // Unique user-created code
-  title: string; // Space title (e.g., "KiyokoCon 2025")
+  title: string; // Space title (e.g., "My Event 2025")
   description?: string; // Optional description
   colors: {
     primary: string; // Primary gradient color

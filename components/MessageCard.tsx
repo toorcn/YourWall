@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Image from 'next/image';
+import NextImage from 'next/image';
 import { Message, Reply } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { Share2, Heart, MessageSquare, Repeat2 } from 'lucide-react';
@@ -19,7 +19,7 @@ interface MessageCardProps {
   spaceCode: string; // Space code for scoping operations
 }
 
-const LIKED_MESSAGES_KEY = 'kiyokocon_liked_messages';
+const LIKED_MESSAGES_KEY = 'yourwall_liked_messages';
 
 // Get liked messages from localStorage
 const getLikedMessages = (): Set<string> => {
@@ -51,7 +51,7 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [showRepostModal, setShowRepostModal] = useState(false);
   const [originalMessage, setOriginalMessage] = useState<Message | null>(null);
-  
+
   const formattedTime = message.timestamp
     ? formatDistanceToNow(message.timestamp.toDate(), { addSuffix: true })
     : 'just now';
@@ -83,7 +83,7 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening share modal
     if (isLiking) return; // Prevent multiple clicks while processing
-    
+
     setIsLiking(true);
     try {
       if (hasLiked) {
@@ -147,15 +147,23 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
             {message.repostedFrom && (
               <div className="flex items-center gap-1.5 mb-2">
                 <Repeat2 className="w-3 h-3 text-purple-600" />
-                <span className="text-xs text-gray-600 italic">
-                  Reposted by <span className="text-purple-600 font-medium">{message.from || 'Anonymous'}</span>
+                <span className="text-xs text-gray-600 italic flex items-center gap-1">
+                  Reposted by
+                  <span className="inline-flex items-center gap-1">
+                    <NextImage src="/avatar-3d.png" alt="User" width={16} height={16} className="w-4 h-4 object-contain opacity-80" />
+                    <span className="text-purple-600 font-medium">{message.from || 'Anonymous'}</span>
+                  </span>
                 </span>
               </div>
             )}
             <div className="flex items-center gap-2 flex-wrap mb-1">
               {!message.repostedFrom && (
-                <span className="text-sm font-medium text-gray-700">
-                  From: <span className="text-purple-600">{message.from || 'Anonymous'}</span>
+                <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                  <span>From:</span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <NextImage src="/avatar-3d.png" alt="User" width={20} height={20} className="w-5 h-5 object-contain opacity-80" />
+                    <span className="text-purple-600">{message.from || 'Anonymous'}</span>
+                  </span>
                 </span>
               )}
             </div>
@@ -187,14 +195,15 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
                   {message.repostComment}
                 </p>
               )}
-              
+
               {/* Nested Original Message Reference */}
               <div className={`p-3 sm:p-4 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-sm ${message.repostComment ? 'ml-2 sm:ml-4' : ''}`}>
                 {/* Original Message Header */}
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-xs font-medium text-gray-700">
+                      <span className="text-xs font-medium text-gray-700 flex items-center gap-1">
+                        <NextImage src="/avatar-3d.png" alt="User" width={16} height={16} className="w-4 h-4 object-contain opacity-80" />
                         {originalMessage.from || 'Anonymous'}
                       </span>
                       {originalMessage.timestamp && (
@@ -252,7 +261,8 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
                     className="p-3 rounded-xl bg-white/40 backdrop-blur-sm border border-white/50"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium text-purple-600">
+                      <span className="text-xs font-medium text-purple-600 flex items-center gap-1.5">
+                        <NextImage src="/avatar-3d.png" alt="User" width={16} height={16} className="w-4 h-4 object-contain opacity-80" />
                         {reply.from || 'Anonymous'}
                       </span>
                       <span className="text-xs text-gray-500">
@@ -297,11 +307,10 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
             <motion.button
               onClick={handleLike}
               disabled={isLiking}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border transition-all duration-200 ${
-                hasLiked
-                  ? 'bg-pink-100/80 border-pink-300 hover:bg-pink-100/90 hover:border-pink-400 cursor-pointer'
-                  : 'bg-white/60 border-white/60 hover:bg-white/80 hover:border-pink-300 cursor-pointer disabled:opacity-50'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm border transition-all duration-200 ${hasLiked
+                ? 'bg-pink-100/80 border-pink-300 hover:bg-pink-100/90 hover:border-pink-400 cursor-pointer'
+                : 'bg-white/60 border-white/60 hover:bg-white/80 hover:border-pink-300 cursor-pointer disabled:opacity-50'
+                }`}
               whileTap={{ scale: 0.9 }}
               title={hasLiked ? 'Unlike this message' : 'Like this message'}
             >
@@ -309,12 +318,11 @@ export default function MessageCard({ message, index, onClick, scrollable = fals
                 animate={isLiking ? { scale: [1, 1.3, 1] } : {}}
                 transition={{ duration: 0.3 }}
               >
-                <Heart 
-                  className={`w-4 h-4 transition-colors ${
-                    hasLiked || (message.likes || 0) > 0 
-                      ? 'text-pink-500 fill-pink-500' 
-                      : 'text-gray-500'
-                  }`}
+                <Heart
+                  className={`w-4 h-4 transition-colors ${hasLiked || (message.likes || 0) > 0
+                    ? 'text-pink-500 fill-pink-500'
+                    : 'text-gray-500'
+                    }`}
                 />
               </motion.div>
               <span className={`text-sm font-medium ${hasLiked ? 'text-pink-600' : 'text-gray-700'}`}>

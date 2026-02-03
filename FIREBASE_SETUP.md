@@ -1,12 +1,12 @@
 # Firebase Setup Guide 🔥
 
-This guide will walk you through setting up Firebase for the KiyokoCon Message Platform.
+This guide will walk you through setting up Firebase for YourWall Message Platform.
 
 ## Step 1: Create a Firebase Project
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. Click **"Add project"**
-3. Enter a project name (e.g., "kiyokocon-messages")
+3. Enter a project name (e.g., "yourwall-messages")
 4. (Optional) Enable Google Analytics
 5. Click **"Create project"**
 
@@ -29,7 +29,7 @@ This guide will walk you through setting up Firebase for the KiyokoCon Message P
 3. Scroll down to **"Your apps"**
 4. Click the **web icon** `</>`
 5. Register your app:
-   - App nickname: "KiyokoCon Message Wall" (or any name)
+   - App nickname: "YourWall Message Board" (or any name)
    - Don't check "Firebase Hosting" (unless you want to deploy there)
 6. Click **"Register app"**
 7. Copy the `firebaseConfig` object

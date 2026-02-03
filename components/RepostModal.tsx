@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, CheckCircle, Repeat2 } from 'lucide-react';
+import NextImage from 'next/image';
 import { addMessage, getMessage } from '@/lib/firestore';
 import { Message, RepostFormData } from '@/lib/types';
 import RecipientSelector from './RecipientSelector';
@@ -201,8 +202,12 @@ export default function RepostModal({
                           <span className="text-xs sm:text-sm font-medium text-gray-600">
                             Original message
                           </span>
-                          <span className="text-xs sm:text-sm text-gray-500">
-                            From: {message.from || 'Anonymous'}
+                          <span className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
+                            From:
+                            <span className="inline-flex items-center gap-1.5 text-purple-600 font-medium">
+                              <NextImage src="/avatar-3d.png" alt="User" width={16} height={16} className="w-4 h-4 object-contain opacity-80" />
+                              {message.from || 'Anonymous'}
+                            </span>
                           </span>
                         </div>
                         <p className="text-sm sm:text-base lg:text-lg text-gray-700 whitespace-pre-wrap line-clamp-3">
@@ -216,14 +221,25 @@ export default function RepostModal({
                           <label className="block text-sm sm:text-base font-medium text-gray-700 mb-4">
                             Your name (Optional)
                           </label>
-                          <input
-                            type="text"
-                            value={formData.from}
-                            onChange={(e) => setFormData({ ...formData, from: e.target.value })}
-                            placeholder="Your name or stay anonymous"
-                            className="w-full px-5 sm:px-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
-                            disabled={isSubmitting}
-                          />
+                          <div className="relative">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                              <NextImage
+                                src="/avatar-3d.png"
+                                alt="User"
+                                width={20}
+                                height={20}
+                                className="w-5 h-5 object-contain opacity-70"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              value={formData.from}
+                              onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                              placeholder="Your name or stay anonymous"
+                              className="w-full pl-12 pr-5 sm:pr-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-white/60 backdrop-blur-sm border border-gray-200 focus:border-purple-300 focus:outline-none transition-all placeholder:text-gray-400"
+                              disabled={isSubmitting}
+                            />
+                          </div>
                         </div>
 
                         {/* Recipients Field */}

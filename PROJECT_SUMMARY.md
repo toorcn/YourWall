@@ -1,8 +1,8 @@
-# KiyokoCon 2025 Message Platform - Project Summary 💌
+# YourWall - Message Platform - Project Summary 💌
 
-## Project Completed ✨
+## Project Overview ✨
 
-A beautiful, dreamy message platform has been created for KiyokoCon 2025 attendees to leave messages for volunteers, committees, and fellow attendees.
+A beautiful, dreamy message platform for events and communities where users can leave messages for volunteers, committees, and fellow attendees.
 
 ## What Was Built
 
@@ -232,7 +232,7 @@ MIT - Free to use and modify for your events!
 
 ---
 
-**Made with 💜 for KiyokoCon 2025**
+**Made with 💜 by YourWall**
 
-*Dreamy, elegant, and cool - perfect for heartfelt messages between convention attendees.*
+*Dreamy, elegant, and cool - perfect for heartfelt messages at events and in communities.*
 
