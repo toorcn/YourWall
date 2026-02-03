@@ -1,6 +1,6 @@
 # Deployment Guide 🚀
 
-Deploy your KiyokoCon Message Platform to production.
+Deploy your YourWall Message Platform to production.
 
 ## Option 1: Vercel (Recommended)
 
