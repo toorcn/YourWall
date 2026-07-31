@@ -5,7 +5,7 @@ import NextImage from 'next/image';
 import { Message, Reply } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { Share2, Heart, MessageSquare, Repeat2 } from 'lucide-react';
-import { likeMessage, unlikeMessage, subscribeToReplies, getMessage } from '@/lib/firestore';
+import { getMessage, hasLikedMessage, likeMessage, subscribeToReplies, unlikeMessage } from '@/lib/firestore';
 import { useState, useEffect } from 'react';
 import ReplyModal from './ReplyModal';
 import RepostModal from './RepostModal';
@@ -20,31 +20,6 @@ interface MessageCardProps {
   onShare?: () => void; // New prop for custom sharing behavior
   isCopied?: boolean; // New prop for showing copied state
 }
-
-const LIKED_MESSAGES_KEY = 'yourwall_liked_messages';
-
-// Get liked messages from localStorage
-const getLikedMessages = (): Set<string> => {
-  if (typeof window === 'undefined') return new Set();
-  const stored = localStorage.getItem(LIKED_MESSAGES_KEY);
-  return stored ? new Set(JSON.parse(stored)) : new Set();
-};
-
-// Save a liked message to localStorage
-const saveLikedMessage = (messageId: string): void => {
-  if (typeof window === 'undefined') return;
-  const liked = getLikedMessages();
-  liked.add(messageId);
-  localStorage.setItem(LIKED_MESSAGES_KEY, JSON.stringify([...liked]));
-};
-
-// Remove a liked message from localStorage
-const removeLikedMessage = (messageId: string): void => {
-  if (typeof window === 'undefined') return;
-  const liked = getLikedMessages();
-  liked.delete(messageId);
-  localStorage.setItem(LIKED_MESSAGES_KEY, JSON.stringify([...liked]));
-};
 
 export default function MessageCard({
   message,
@@ -76,10 +51,19 @@ export default function MessageCard({
     }
   }, [message.repostedFrom, spaceCode]);
 
-  // Check if this message has been liked on mount
+  // The per-user like document is the source of truth. It prevents a single
+  // anonymous account from incrementing the same message repeatedly.
   useEffect(() => {
-    const likedMessages = getLikedMessages();
-    setHasLiked(likedMessages.has(message.id));
+    let cancelled = false;
+    hasLikedMessage(message.id)
+      .then((liked) => {
+        if (!cancelled) setHasLiked(liked);
+      })
+      .catch((error) => console.error('Error checking like status:', error));
+
+    return () => {
+      cancelled = true;
+    };
   }, [message.id]);
 
   // Subscribe to replies for this message
@@ -100,12 +84,10 @@ export default function MessageCard({
       if (hasLiked) {
         // Unlike the message
         await unlikeMessage(message.id, spaceCode);
-        removeLikedMessage(message.id);
         setHasLiked(false);
       } else {
         // Like the message
         await likeMessage(message.id, spaceCode);
-        saveLikedMessage(message.id);
         setHasLiked(true);
       }
     } catch (error) {

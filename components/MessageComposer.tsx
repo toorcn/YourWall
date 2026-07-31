@@ -138,6 +138,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                           type="text"
                           value={formData.from}
                           onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                          maxLength={80}
                           placeholder="Your name, department, role, or stay anonymous"
                           className="w-full pl-12 pr-6 py-5 rounded-xl bg-surface-50 border-2 border-surface-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 focus:outline-none transition-all duration-300 placeholder:text-brand-900/50 disabled:opacity-50 disabled:cursor-not-allowed focus-modern text-brand-900"
                           autoFocus
@@ -202,6 +203,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                     <textarea
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      maxLength={MAX_CHARACTERS}
                       placeholder="Share your thoughts, appreciation, or encouragement..."
                       rows={12}
                       className="w-full px-6 py-5 rounded-xl bg-surface-50 border-2 border-surface-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/20 focus:outline-none transition-all duration-300 placeholder:text-brand-900/50 resize-none overflow-y-auto focus-modern text-brand-900"
@@ -354,4 +356,3 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
     </div>
   );
 }
-

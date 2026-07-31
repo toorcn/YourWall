@@ -4,17 +4,16 @@ import {
   query,
   orderBy,
   onSnapshot,
-  Timestamp,
-  getDocs,
   getDoc,
   doc,
   setDoc,
-  updateDoc,
-  increment,
   where,
+  limit,
+  runTransaction,
+  serverTimestamp,
 } from 'firebase/firestore';
-import { db } from './firebase';
-import { Message, Group, MessageFormData, Reply, ReplyFormData, Space, SpaceFormData } from './types';
+import { db, ensureAnonymousAuth } from './firebase';
+import { Message, MessageFormData, Reply, ReplyFormData, Space, SpaceFormData } from './types';
 
 // Predefined popular groups
 const POPULAR_GROUPS = ['General', 'Shoutouts', 'Q&A'];
@@ -125,6 +124,7 @@ export const getSpaceByCode = async (code: string): Promise<Space | null> => {
 export const createSpace = async (spaceData: SpaceFormData): Promise<void> => {
   try {
     const normalizedCode = spaceData.code.toLowerCase().trim();
+    const user = await ensureAnonymousAuth();
 
     // Validate code
     const validation = await validateSpaceCode(normalizedCode);
@@ -132,19 +132,19 @@ export const createSpace = async (spaceData: SpaceFormData): Promise<void> => {
       throw new Error(validation.error || 'Invalid or unavailable space code');
     }
 
-    const space: Omit<Space, 'code'> = {
-      title: spaceData.title,
+    const space = {
+      title: spaceData.title.trim(),
       colors: spaceData.colors,
       popularGroups: spaceData.popularGroups.length > 0 ? spaceData.popularGroups : POPULAR_GROUPS,
-      createdAt: Timestamp.now(),
+      createdAt: serverTimestamp(),
+      ownerUid: user.uid,
       stats: {
         messageCount: 0,
         groupCount: 0,
         totalLikes: 0,
       },
       // Only include optional fields if they have values
-      ...(spaceData.description && { description: spaceData.description }),
-      ...(spaceData.createdBy && { createdBy: spaceData.createdBy }),
+      ...(spaceData.description?.trim() && { description: spaceData.description.trim() }),
     };
 
     const spaceRef = doc(db, 'spaces', normalizedCode);
@@ -155,88 +155,6 @@ export const createSpace = async (spaceData: SpaceFormData): Promise<void> => {
       throw error;
     }
     throw new Error('Failed to create space. Please try again.');
-  }
-};
-
-// Update space statistics
-export const updateSpaceStats = async (
-  spaceCode: string,
-  updates: { messageCount?: number; groupCount?: number; totalLikes?: number }
-): Promise<void> => {
-  try {
-    const normalizedCode = spaceCode.toLowerCase().trim();
-    const spaceRef = doc(db, 'spaces', normalizedCode);
-
-    const statsUpdate: Record<string, number> = {};
-    if (updates.messageCount !== undefined) {
-      statsUpdate['stats.messageCount'] = updates.messageCount;
-    }
-    if (updates.groupCount !== undefined) {
-      statsUpdate['stats.groupCount'] = updates.groupCount;
-    }
-    if (updates.totalLikes !== undefined) {
-      statsUpdate['stats.totalLikes'] = updates.totalLikes;
-    }
-
-    // Firestore doesn't support nested field updates with dot notation in updateDoc
-    // We need to get the current stats and update them
-    const spaceSnap = await getDoc(spaceRef);
-    if (spaceSnap.exists()) {
-      const currentData = spaceSnap.data() as Space;
-      const currentStats = currentData.stats || { messageCount: 0, groupCount: 0, totalLikes: 0 };
-
-      await updateDoc(spaceRef, {
-        stats: {
-          messageCount: updates.messageCount ?? currentStats.messageCount,
-          groupCount: updates.groupCount ?? currentStats.groupCount,
-          totalLikes: updates.totalLikes ?? currentStats.totalLikes,
-        },
-      });
-    }
-  } catch (error) {
-    console.error('Error updating space stats:', error);
-    // Don't throw - stats updates are non-critical
-  }
-};
-
-// Increment space statistics (helper for analytics)
-export const incrementSpaceStats = async (
-  spaceCode: string,
-  increments: { messageCount?: number; groupCount?: number; totalLikes?: number }
-): Promise<void> => {
-  try {
-    const normalizedCode = spaceCode.toLowerCase().trim();
-    const spaceRef = doc(db, 'spaces', normalizedCode);
-
-    const statsUpdate: Record<string, ReturnType<typeof increment>> = {};
-    if (increments.messageCount !== undefined) {
-      statsUpdate['stats.messageCount'] = increment(increments.messageCount);
-    }
-    if (increments.groupCount !== undefined) {
-      statsUpdate['stats.groupCount'] = increment(increments.groupCount);
-    }
-    if (increments.totalLikes !== undefined) {
-      statsUpdate['stats.totalLikes'] = increment(increments.totalLikes);
-    }
-
-    // Firestore doesn't support nested field increments directly
-    // We need to get the current stats and update them
-    const spaceSnap = await getDoc(spaceRef);
-    if (spaceSnap.exists()) {
-      const currentData = spaceSnap.data() as Space;
-      const currentStats = currentData.stats || { messageCount: 0, groupCount: 0, totalLikes: 0 };
-
-      await updateDoc(spaceRef, {
-        stats: {
-          messageCount: currentStats.messageCount + (increments.messageCount || 0),
-          groupCount: currentStats.groupCount + (increments.groupCount || 0),
-          totalLikes: currentStats.totalLikes + (increments.totalLikes || 0),
-        },
-      });
-    }
-  } catch (error) {
-    console.error('Error incrementing space stats:', error);
-    // Don't throw - stats updates are non-critical
   }
 };
 
@@ -270,6 +188,8 @@ export const addMessage = async (messageData: MessageFormData, spaceCode: string
   const normalizedSpaceCode = spaceCode.toLowerCase().trim();
 
   try {
+    const user = await ensureAnonymousAuth();
+
     // If reposting, fetch the original message content
     let content = messageData.content;
 
@@ -283,47 +203,19 @@ export const addMessage = async (messageData: MessageFormData, spaceCode: string
     }
 
     const message = {
-      from: messageData.from || 'Anonymous',
-      to: messageData.to,
-      content: content,
-      timestamp: Timestamp.now(),
+      from: messageData.from.trim() || 'Anonymous',
+      to: messageData.to.map((recipient) => recipient.trim()),
+      content: content.trim(),
+      timestamp: serverTimestamp(),
       color: getRandomColor(),
       likes: 0,
       spaceCode: normalizedSpaceCode,
+      authorUid: user.uid,
       ...(messageData.repostedFrom && { repostedFrom: messageData.repostedFrom }),
-      ...(messageData.repostComment && { repostComment: messageData.repostComment }),
+      ...(messageData.repostComment?.trim() && { repostComment: messageData.repostComment.trim() }),
     };
 
     await addDoc(collection(db, 'messages'), message);
-
-    // Update or create groups (scoped to space)
-    let newGroupsCount = 0;
-    for (const recipient of messageData.to) {
-      const groupId = `${normalizedSpaceCode}_${recipient.toLowerCase()}`;
-      const groupRef = doc(db, 'groups', groupId);
-
-      try {
-        await updateDoc(groupRef, {
-          messageCount: increment(1),
-        });
-      } catch {
-        // Group doesn't exist, create it
-        await setDoc(groupRef, {
-          id: groupId,
-          displayName: recipient,
-          createdAt: Timestamp.now(),
-          messageCount: 1,
-          spaceCode: normalizedSpaceCode,
-        });
-        newGroupsCount++;
-      }
-    }
-
-    // Update space stats
-    await incrementSpaceStats(normalizedSpaceCode, {
-      messageCount: 1,
-      groupCount: newGroupsCount,
-    });
   } catch (error) {
     console.error('Error saving message to Firestore:', error);
     throw new Error('Failed to save message. Please try again.');
@@ -333,49 +225,57 @@ export const addMessage = async (messageData: MessageFormData, spaceCode: string
 // Like a message
 export const likeMessage = async (messageId: string, spaceCode: string): Promise<void> => {
   const normalizedSpaceCode = spaceCode.toLowerCase().trim();
+  const user = await ensureAnonymousAuth();
   const messageRef = doc(db, 'messages', messageId);
+  const likeRef = doc(db, 'messages', messageId, 'likes', user.uid);
 
-  // Verify message belongs to space before updating
-  const messageSnap = await getDoc(messageRef);
-  if (messageSnap.exists()) {
-    const messageData = messageSnap.data() as Message;
-    if (messageData.spaceCode !== normalizedSpaceCode) {
+  await runTransaction(db, async (transaction) => {
+    const [messageSnap, likeSnap] = await Promise.all([
+      transaction.get(messageRef),
+      transaction.get(likeRef),
+    ]);
+
+    if (!messageSnap.exists() || messageSnap.data().spaceCode !== normalizedSpaceCode) {
       throw new Error('Message does not belong to this space');
     }
-  }
+    if (likeSnap.exists()) return;
 
-  await updateDoc(messageRef, {
-    likes: increment(1),
-  });
-
-  // Update space stats
-  await incrementSpaceStats(normalizedSpaceCode, {
-    totalLikes: 1,
+    const likes = Math.max(0, Number(messageSnap.data().likes) || 0);
+    transaction.update(messageRef, { likes: likes + 1 });
+    transaction.set(likeRef, {
+      userId: user.uid,
+      createdAt: serverTimestamp(),
+    });
   });
 };
 
 // Unlike a message
 export const unlikeMessage = async (messageId: string, spaceCode: string): Promise<void> => {
   const normalizedSpaceCode = spaceCode.toLowerCase().trim();
+  const user = await ensureAnonymousAuth();
   const messageRef = doc(db, 'messages', messageId);
+  const likeRef = doc(db, 'messages', messageId, 'likes', user.uid);
 
-  // Verify message belongs to space before updating
-  const messageSnap = await getDoc(messageRef);
-  if (messageSnap.exists()) {
-    const messageData = messageSnap.data() as Message;
-    if (messageData.spaceCode !== normalizedSpaceCode) {
+  await runTransaction(db, async (transaction) => {
+    const [messageSnap, likeSnap] = await Promise.all([
+      transaction.get(messageRef),
+      transaction.get(likeRef),
+    ]);
+
+    if (!messageSnap.exists() || messageSnap.data().spaceCode !== normalizedSpaceCode) {
       throw new Error('Message does not belong to this space');
     }
-  }
+    if (!likeSnap.exists()) return;
 
-  await updateDoc(messageRef, {
-    likes: increment(-1),
+    const likes = Math.max(0, Number(messageSnap.data().likes) || 0);
+    transaction.update(messageRef, { likes: Math.max(0, likes - 1) });
+    transaction.delete(likeRef);
   });
+};
 
-  // Update space stats
-  await incrementSpaceStats(normalizedSpaceCode, {
-    totalLikes: -1,
-  });
+export const hasLikedMessage = async (messageId: string): Promise<boolean> => {
+  const user = await ensureAnonymousAuth();
+  return (await getDoc(doc(db, 'messages', messageId, 'likes', user.uid))).exists();
 };
 
 // Subscribe to messages in real-time (scoped to space)
@@ -393,13 +293,15 @@ export const subscribeToMessages = (
     q = query(
       collection(db, 'messages'),
       where('spaceCode', '==', normalizedSpaceCode),
-      where('to', 'array-contains', filter)
+      where('to', 'array-contains', filter),
+      limit(200)
     );
   } else {
     q = query(
       collection(db, 'messages'),
       where('spaceCode', '==', normalizedSpaceCode),
-      orderBy('timestamp', 'desc')
+      orderBy('timestamp', 'desc'),
+      limit(200)
     );
   }
 
@@ -424,68 +326,15 @@ export const subscribeToMessages = (
   return unsubscribe;
 };
 
-// Get all groups (scoped to space)
-export const getGroups = async (spaceCode: string): Promise<Group[]> => {
-  const normalizedSpaceCode = spaceCode.toLowerCase().trim();
-  const q = query(
-    collection(db, 'groups'),
-    where('spaceCode', '==', normalizedSpaceCode),
-    orderBy('messageCount', 'desc')
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => doc.data() as Group);
-};
-
-// Subscribe to groups in real-time (scoped to space)
-export const subscribeToGroups = (
-  spaceCode: string,
-  callback: (groups: Group[]) => void
-): (() => void) => {
-  const normalizedSpaceCode = spaceCode.toLowerCase().trim();
-  const q = query(
-    collection(db, 'groups'),
-    where('spaceCode', '==', normalizedSpaceCode),
-    orderBy('messageCount', 'desc')
-  );
-
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const groups: Group[] = snapshot.docs.map((doc) => doc.data() as Group);
-    callback(groups);
-  });
-
-  return unsubscribe;
-};
-
-// Initialize popular groups if they don't exist (scoped to space)
-export const initializePopularGroups = async (spaceCode: string, popularGroups?: string[]): Promise<void> => {
-  const normalizedSpaceCode = spaceCode.toLowerCase().trim();
-  const groupsToInitialize = popularGroups && popularGroups.length > 0 ? popularGroups : POPULAR_GROUPS;
-
-  for (const groupName of groupsToInitialize) {
-    const groupId = `${normalizedSpaceCode}_${groupName.toLowerCase()}`;
-    const groupRef = doc(db, 'groups', groupId);
-
-    try {
-      await setDoc(groupRef, {
-        id: groupId,
-        displayName: groupName,
-        createdAt: Timestamp.now(),
-        messageCount: 0,
-        spaceCode: normalizedSpaceCode,
-      }, { merge: true }); // Use merge to not overwrite existing data
-    } catch (error) {
-      console.error('Error initializing group:', groupName, error);
-    }
-  }
-};
-
 // Add a reply to a message
 export const addReply = async (messageId: string, replyData: ReplyFormData): Promise<void> => {
   try {
+    const user = await ensureAnonymousAuth();
     const reply = {
-      from: replyData.from || 'Anonymous',
-      content: replyData.content,
-      timestamp: Timestamp.now(),
+      from: replyData.from.trim() || 'Anonymous',
+      content: replyData.content.trim(),
+      timestamp: serverTimestamp(),
+      authorUid: user.uid,
     };
 
     const repliesRef = collection(db, 'messages', messageId, 'replies');
@@ -502,7 +351,7 @@ export const subscribeToReplies = (
   callback: (replies: Reply[]) => void
 ): (() => void) => {
   const repliesRef = collection(db, 'messages', messageId, 'replies');
-  const q = query(repliesRef, orderBy('timestamp', 'asc'));
+  const q = query(repliesRef, orderBy('timestamp', 'asc'), limit(100));
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const replies: Reply[] = snapshot.docs.map((doc) => ({
@@ -515,4 +364,3 @@ export const subscribeToReplies = (
 
   return unsubscribe;
 };
-

@@ -173,10 +173,15 @@ export default function CreateSpacePage() {
 
 
   const handleAddGroup = () => {
-    if (newGroup.trim() && !formData.popularGroups.includes(newGroup.trim())) {
+    const normalizedGroup = newGroup.trim().slice(0, 60);
+    if (
+      normalizedGroup &&
+      formData.popularGroups.length < 12 &&
+      !formData.popularGroups.includes(normalizedGroup)
+    ) {
       setFormData({
         ...formData,
-        popularGroups: [...formData.popularGroups, newGroup.trim()],
+        popularGroups: [...formData.popularGroups, normalizedGroup],
       });
       setNewGroup('');
     }
@@ -259,6 +264,7 @@ export default function CreateSpacePage() {
                 type="text"
                 value={formData.title}
                 onChange={handleTitleChange}
+                maxLength={100}
                 placeholder="e.g. Graduation Party, Housewarming, Birthday Bash"
                 className="w-full px-4 py-3 rounded-2xl bg-surface-50/50 backdrop-blur-md border border-surface-100/40 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900 font-medium"
                 required
@@ -279,6 +285,7 @@ export default function CreateSpacePage() {
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                maxLength={500}
                 placeholder="e.g. Say hi, leave a memory, or send some good vibes!"
                 rows={2}
                 className="w-full px-4 py-3 rounded-2xl bg-surface-50/50 backdrop-blur-md border border-surface-100/40 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900 resize-none"
@@ -428,6 +435,7 @@ export default function CreateSpacePage() {
                   type="text"
                   value={newGroup}
                   onChange={(e) => setNewGroup(e.target.value)}
+                  maxLength={60}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -444,7 +452,7 @@ export default function CreateSpacePage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-4 py-2 rounded-xl bg-brand-500 text-white hover:bg-brand-600 transition-all font-medium"
-                  disabled={isSubmitting || !newGroup.trim()}
+                  disabled={isSubmitting || !newGroup.trim() || formData.popularGroups.length >= 12}
                 >
                   <Plus className="w-5 h-5" />
                 </motion.button>

@@ -8,6 +8,7 @@ export interface Message {
   timestamp: Timestamp;
   color?: string; // Optional color for visual variety
   likes?: number; // Number of likes/hearts
+  authorUid?: string; // Anonymous Firebase Auth uid for newly created messages
   repostedFrom?: string; // ID of the original message being reposted
   repostComment?: string; // Optional comment added by the reposter
   spaceCode: string; // Links message to space
@@ -33,6 +34,7 @@ export interface Space {
   popularGroups: string[]; // Custom popular groups for this space
   createdAt: Timestamp;
   createdBy?: string; // Optional creator identifier
+  ownerUid?: string; // Anonymous Firebase Auth uid for newly created spaces
   stats: {
     messageCount: number;
     groupCount: number;
@@ -66,6 +68,7 @@ export interface Reply {
   from: string; // Can be empty for anonymous
   content: string;
   timestamp: Timestamp;
+  authorUid?: string; // Anonymous Firebase Auth uid for newly created replies
 }
 
 export interface ReplyFormData {
@@ -78,4 +81,3 @@ export interface RepostFormData {
   to: string[];
   repostComment?: string; // Optional comment added by the reposter
 }
-

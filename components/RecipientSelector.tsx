@@ -43,8 +43,13 @@ export default function RecipientSelector({
   }, [input, availableGroups, selectedRecipients]);
 
   const addRecipient = (recipient: string) => {
-    if (recipient && !selectedRecipients.includes(recipient)) {
-      onRecipientsChange([...selectedRecipients, recipient]);
+    const normalizedRecipient = recipient.trim().slice(0, 80);
+    if (
+      normalizedRecipient &&
+      selectedRecipients.length < 10 &&
+      !selectedRecipients.includes(normalizedRecipient)
+    ) {
+      onRecipientsChange([...selectedRecipients, normalizedRecipient]);
       setInput('');
       setShowSuggestions(false);
     }
@@ -118,6 +123,7 @@ export default function RecipientSelector({
             onKeyDown={handleKeyDown}
             onFocus={handleFocus}
             onBlur={handleBlur}
+            maxLength={80}
             placeholder={selectedRecipients.length === 0 ? "To: type here to create a group" : "Add more..."}
             className="flex-1 min-w-[200px] bg-transparent outline-none placeholder:text-brand-900/60 text-brand-900"
           />
@@ -192,4 +198,3 @@ export default function RecipientSelector({
     </div>
   );
 }
-

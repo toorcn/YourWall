@@ -1,5 +1,5 @@
-import { ref, uploadBytes, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
-import { storage } from './firebase';
+import { ref, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
+import { ensureAnonymousAuth, storage } from './firebase';
 
 // Maximum file size: 5MB (reduced for better upload reliability)
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -52,11 +52,13 @@ export const uploadMessageImage = async (file: File): Promise<string> => {
     throw new Error(validation.error);
   }
 
+  const user = await ensureAnonymousAuth();
+
   // Create a unique filename
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(2, 15);
   const extension = file.name.split('.').pop();
-  const filename = `message-images/${timestamp}_${randomString}.${extension}`;
+  const filename = `message-images/${user.uid}/${timestamp}_${randomString}.${extension}`;
 
   // Create storage reference
   const storageRef = ref(storage, filename);
@@ -224,4 +226,3 @@ export const compressImage = async (file: File, maxWidth: number = 1200): Promis
     reader.onerror = () => reject(new Error('Failed to read file for compression'));
   });
 };
-

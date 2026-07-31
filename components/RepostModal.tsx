@@ -235,6 +235,7 @@ export default function RepostModal({
                               type="text"
                               value={formData.from}
                               onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                              maxLength={80}
                               placeholder="Your name or stay anonymous"
                               className="w-full pl-12 pr-5 sm:pr-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-surface-50/60 backdrop-blur-sm border border-surface-200 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900"
                               disabled={isSubmitting}
@@ -262,6 +263,7 @@ export default function RepostModal({
                           <textarea
                             value={formData.repostComment || ''}
                             onChange={(e) => setFormData({ ...formData, repostComment: e.target.value })}
+                            maxLength={MAX_COMMENT_CHARACTERS}
                             placeholder="Add your thoughts about this message..."
                             rows={6}
                             className="w-full px-5 sm:px-7 py-4 sm:py-5 text-sm sm:text-base rounded-2xl bg-surface-50/60 backdrop-blur-sm border border-surface-200 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900 resize-none"
@@ -347,4 +349,3 @@ export default function RepostModal({
     </AnimatePresence>
   );
 }
-

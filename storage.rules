@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Existing and new wall images are public because the wall itself is public.
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+
+    match /message-images/{userId}/{fileName} {
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|gif|webp)');
+
+      allow update, delete: if false;
+    }
+  }
+}

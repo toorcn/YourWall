@@ -135,6 +135,7 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                             type="text"
                             value={formData.from}
                             onChange={(e) => setFormData({ ...formData, from: e.target.value })}
+                            maxLength={80}
                             placeholder="Your name or stay anonymous"
                             className="w-full pl-12 pr-6 py-4 rounded-2xl bg-surface-50/60 backdrop-blur-sm border border-surface-200 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900"
                             disabled={isSubmitting}
@@ -150,6 +151,7 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                         <textarea
                           value={formData.content}
                           onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                          maxLength={MAX_CHARACTERS}
                           placeholder="Write your reply..."
                           rows={6}
                           className="w-full px-6 py-4 rounded-2xl bg-surface-50/60 backdrop-blur-sm border border-surface-200 focus:border-brand-300 focus:outline-none transition-all placeholder:text-brand-900/30 text-brand-900 resize-none"
@@ -241,4 +243,3 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
     </AnimatePresence>
   );
 }
-

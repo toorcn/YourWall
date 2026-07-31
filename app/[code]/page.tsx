@@ -11,8 +11,8 @@ import FilterBar from '@/components/FilterBar';
 import FloatingParticles from '@/components/FloatingParticles';
 import ShareModal from '@/components/ShareModal';
 import RandomCardViewer from '@/components/RandomCardViewer';
-import { subscribeToMessages, subscribeToGroups, initializePopularGroups, getSpaceByCode } from '@/lib/firestore';
-import { Message, Group, Space } from '@/lib/types';
+import { getSpaceByCode, subscribeToMessages } from '@/lib/firestore';
+import { Message, Space } from '@/lib/types';
 
 export default function SpacePage() {
   const params = useParams();
@@ -21,7 +21,6 @@ export default function SpacePage() {
 
   const [space, setSpace] = useState<Space | null>(null);
   const [allMessages, setAllMessages] = useState<Message[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [selectedSort, setSelectedSort] = useState('newest');
   const [isLoading, setIsLoading] = useState(true);
@@ -114,21 +113,6 @@ export default function SpacePage() {
     };
   }, [spaceCode]);
 
-  // Initialize groups and subscribe to group changes (runs once)
-  useEffect(() => {
-    if (!spaceCode || !space) return;
-
-    initializePopularGroups(spaceCode, space.popularGroups);
-
-    const unsubscribeGroups = subscribeToGroups(spaceCode, (newGroups) => {
-      setGroups(newGroups);
-    });
-
-    return () => {
-      unsubscribeGroups();
-    };
-  }, [spaceCode, space]);
-
   // Subscribe to all messages (no server-side filtering)
   useEffect(() => {
     if (!spaceCode) return;
@@ -210,7 +194,15 @@ export default function SpacePage() {
     setIsRandomViewerOpen(true);
   }, [filteredMessages]);
 
-  const availableGroups = groups.map((g) => g.displayName);
+  // Group suggestions are derived from trusted space configuration and public
+  // messages, so clients no longer need permission to mutate a counters table.
+  const availableGroups = useMemo(
+    () => Array.from(new Set([
+      ...(space?.popularGroups || []),
+      ...allMessages.flatMap((message) => message.to),
+    ])),
+    [allMessages, space?.popularGroups]
+  );
 
   // Get colors from space config or use defaults
   const primaryColor = space?.colors?.primary || '#9333ea'; // purple-600
@@ -608,4 +600,3 @@ export default function SpacePage() {
     </div>
   );
 }
-
