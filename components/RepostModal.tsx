@@ -294,7 +294,7 @@ export default function RepostModal({
                           whileTap={isValid ? { scale: 0.98 } : {}}
                           className={`w-full px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${isValid
                             ? 'bg-gradient-to-r from-brand-500 to-accent-500 text-white shadow-lg hover:shadow-xl'
-                            : 'bg-surface-200 text-surface-400 cursor-not-allowed'
+                            : 'bg-surface-200 text-surface-600 cursor-not-allowed'
                             }`}
                         >
                           {isSubmitting ? (

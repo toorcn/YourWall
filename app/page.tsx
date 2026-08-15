@@ -213,7 +213,7 @@ export default function Home() {
                 whileHover={!isLoading && code.trim() ? { scale: 1.02 } : {}}
                 whileTap={!isLoading && code.trim() ? { scale: 0.98 } : {}}
                 className={`w-full px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 transition-all duration-300 btn-modern ${isLoading || !code.trim()
-                  ? 'bg-surface-200 text-surface-400 cursor-not-allowed'
+                  ? 'bg-surface-200 text-surface-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-brand-500 to-brand-600 text-black shadow-xl hover:shadow-2xl'
                   }`}
               >

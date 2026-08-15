@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+/* Tailwind v4 reads the design tokens from @theme (not tailwind.config.ts or
+   :root), and generates the brand/accent/surface utilities from them. */
+@theme {
   --color-brand-50: #eef2ff;
   --color-brand-100: #e0e7ff;
   --color-brand-200: #c7d2fe;
@@ -25,9 +27,23 @@
   --color-accent-900: #881337;
   --color-accent-950: #4c0519;
 
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface-400: #94a3b8;
+  --color-surface-500: #64748b;
+  --color-surface-600: #475569;
+  --color-surface-700: #334155;
+  --color-surface-800: #1e293b;
+  --color-surface-900: #0f172a;
+  --color-surface-950: #020617;
+
   --font-sans: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: 'Playfair Display', serif;
+}
 
+:root {
   /* Dynamic Gradients based on Brand Colors */
   --gradient-primary: linear-gradient(135deg, var(--color-brand-500) 0%, var(--color-brand-700) 100%);
   --gradient-secondary: linear-gradient(135deg, var(--color-accent-300) 0%, var(--color-accent-500) 100%);

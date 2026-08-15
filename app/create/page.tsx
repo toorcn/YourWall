@@ -539,7 +539,7 @@ export default function CreateSpacePage() {
               whileHover={!isSubmitting && formData.code.trim() && formData.title.trim() && !codeError ? { scale: 1.02 } : {}}
               whileTap={!isSubmitting && formData.code.trim() && formData.title.trim() && !codeError ? { scale: 0.98 } : {}}
               className={`w-full px-6 py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-xl hover:shadow-2xl ${isSubmitting || !formData.code.trim() || !formData.title.trim() || !!codeError
-                ? 'bg-surface-200 text-surface-400 cursor-not-allowed transform-none'
+                ? 'bg-surface-200 text-surface-600 cursor-not-allowed transform-none'
                 : 'bg-gradient-to-r from-brand-500 to-accent-500 text-black'
                 }`}
             >

@@ -189,7 +189,7 @@ export default function ReplyModal({ isOpen, onClose, messageId, messageFrom }: 
                         whileTap={isValid ? { scale: 0.98 } : {}}
                         className={`w-full px-6 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 transition-all ${isValid
                           ? 'bg-gradient-to-r from-brand-500 to-accent-500 text-white shadow-lg hover:shadow-xl'
-                          : 'bg-surface-200 text-surface-400 cursor-not-allowed'
+                          : 'bg-surface-200 text-surface-600 cursor-not-allowed'
                           }`}
                       >
                         {isSubmitting ? (

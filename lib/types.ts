@@ -5,7 +5,7 @@ export interface Message {
   from: string; // Can be empty for anonymous
   to: string[]; // Array of recipient names/groups
   content: string;
-  timestamp: Timestamp;
+  timestamp: Timestamp | null; // null while the serverTimestamp write is pending
   color?: string; // Optional color for visual variety
   likes?: number; // Number of likes/hearts
   authorUid?: string; // Anonymous Firebase Auth uid for newly created messages
@@ -67,7 +67,7 @@ export interface Reply {
   id: string;
   from: string; // Can be empty for anonymous
   content: string;
-  timestamp: Timestamp;
+  timestamp: Timestamp | null; // null while the serverTimestamp write is pending
   authorUid?: string; // Anonymous Firebase Auth uid for newly created replies
 }
 

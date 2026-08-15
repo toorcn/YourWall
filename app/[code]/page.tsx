@@ -151,6 +151,11 @@ export default function SpacePage() {
       }
     }
 
+    // A just-sent message has a pending serverTimestamp, so its `timestamp` is
+    // null in the local snapshot until the server acknowledges it. Treat those
+    // as "now" so they sort as the newest message.
+    const timeOf = (message: Message) => message.timestamp?.toMillis() ?? Date.now();
+
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       switch (selectedSort) {
@@ -160,12 +165,12 @@ export default function SpacePage() {
           if (bLikes !== aLikes) {
             return bLikes - aLikes;
           }
-          return b.timestamp.toMillis() - a.timestamp.toMillis();
+          return timeOf(b) - timeOf(a);
         case 'oldest':
-          return a.timestamp.toMillis() - b.timestamp.toMillis();
+          return timeOf(a) - timeOf(b);
         case 'newest':
         default:
-          return b.timestamp.toMillis() - a.timestamp.toMillis();
+          return timeOf(b) - timeOf(a);
       }
     });
 
@@ -372,7 +377,7 @@ export default function SpacePage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-xl text-brand-900/80 font-medium mb-4 max-w-2xl mx-auto"
+            className="text-xl text-brand-900/80 font-medium mb-4 max-w-2xl mx-auto whitespace-pre-wrap wrap-break-word"
           >
             {space.description || 'Share your thoughts and connect with others'}
           </motion.p>
