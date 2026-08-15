@@ -45,7 +45,7 @@ export const validateImageFile = (file: File): { valid: boolean; error?: string;
 /**
  * Uploads an image to Firebase Storage and returns the download URL with timeout and retry
  */
-export const uploadMessageImage = async (file: File): Promise<string> => {
+export const uploadMessageImage = async (file: File, spaceCode: string): Promise<string> => {
   // Validate the file
   const validation = validateImageFile(file);
   if (!validation.valid) {
@@ -58,7 +58,7 @@ export const uploadMessageImage = async (file: File): Promise<string> => {
   const timestamp = Date.now();
   const randomString = Math.random().toString(36).substring(2, 15);
   const extension = file.name.split('.').pop();
-  const filename = `message-images/${user.uid}/${timestamp}_${randomString}.${extension}`;
+  const filename = `message-images/${spaceCode}/${user.uid}/${timestamp}_${randomString}.${extension}`;
 
   // Create storage reference
   const storageRef = ref(storage, filename);

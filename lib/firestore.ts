@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db, ensureAnonymousAuth } from './firebase';
 import { Message, MessageFormData, Reply, ReplyFormData, Space, SpaceFormData } from './types';
+import { compressImage, uploadMessageImage } from './storage';
 
 // Predefined popular groups
 const POPULAR_GROUPS = ['General', 'Shoutouts', 'Q&A'];
@@ -136,6 +137,7 @@ export const createSpace = async (spaceData: SpaceFormData): Promise<void> => {
       title: spaceData.title.trim(),
       colors: spaceData.colors,
       popularGroups: spaceData.popularGroups.length > 0 ? spaceData.popularGroups : POPULAR_GROUPS,
+      imagesEnabled: false,
       createdAt: serverTimestamp(),
       ownerUid: user.uid,
       stats: {
@@ -189,6 +191,17 @@ export const addMessage = async (messageData: MessageFormData, spaceCode: string
 
   try {
     const user = await ensureAnonymousAuth();
+    let imageUrl: string | undefined;
+
+    if (messageData.imageFile) {
+      const space = await getSpaceByCode(normalizedSpaceCode);
+      if (space?.imagesEnabled !== true) {
+        throw new Error('Image uploads are not enabled for this space.');
+      }
+
+      const compressedImage = await compressImage(messageData.imageFile);
+      imageUrl = await uploadMessageImage(compressedImage, normalizedSpaceCode);
+    }
 
     // If reposting, fetch the original message content
     let content = messageData.content;
@@ -211,6 +224,7 @@ export const addMessage = async (messageData: MessageFormData, spaceCode: string
       likes: 0,
       spaceCode: normalizedSpaceCode,
       authorUid: user.uid,
+      ...(imageUrl && { imageUrl }),
       ...(messageData.repostedFrom && { repostedFrom: messageData.repostedFrom }),
       ...(messageData.repostComment?.trim() && { repostComment: messageData.repostComment.trim() }),
     };
@@ -282,7 +296,8 @@ export const hasLikedMessage = async (messageId: string): Promise<boolean> => {
 export const subscribeToMessages = (
   spaceCode: string,
   callback: (messages: Message[]) => void,
-  filter?: string
+  filter?: string,
+  onError?: (error: Error) => void
 ): (() => void) => {
   const normalizedSpaceCode = spaceCode.toLowerCase().trim();
   let q;
@@ -305,23 +320,30 @@ export const subscribeToMessages = (
     );
   }
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const messages: Message[] = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Message[];
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const messages: Message[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Message[];
 
-    // Sort by timestamp descending if we didn't use orderBy in the query
-    if (filter && filter !== 'all') {
-      messages.sort((a, b) => {
-        const aTime = a.timestamp?.toMillis() || 0;
-        const bTime = b.timestamp?.toMillis() || 0;
-        return bTime - aTime;
-      });
+      // Sort by timestamp descending if we didn't use orderBy in the query
+      if (filter && filter !== 'all') {
+        messages.sort((a, b) => {
+          const aTime = a.timestamp?.toMillis() || 0;
+          const bTime = b.timestamp?.toMillis() || 0;
+          return bTime - aTime;
+        });
+      }
+
+      callback(messages);
+    },
+    (error) => {
+      console.error('Error loading messages:', error);
+      onError?.(error);
     }
-
-    callback(messages);
-  });
+  );
 
   return unsubscribe;
 };

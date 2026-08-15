@@ -225,6 +225,16 @@ export default function MessageCard({
                   {originalMessage.content}
                 </p>
 
+                {originalMessage.imageUrl && (
+                  <NextImage
+                    src={originalMessage.imageUrl}
+                    alt="Image attached to the original message"
+                    width={1200}
+                    height={800}
+                    className="mt-3 max-h-72 w-full rounded-lg object-contain"
+                  />
+                )}
+
               </div>
             </div>
           ) : (
@@ -233,6 +243,16 @@ export default function MessageCard({
               <p className="text-brand-900 leading-relaxed whitespace-pre-wrap wrap-break-word">
                 {message.content}
               </p>
+
+              {message.imageUrl && (
+                <NextImage
+                  src={message.imageUrl}
+                  alt="Image attached to this message"
+                  width={1200}
+                  height={800}
+                  className="mt-4 max-h-96 w-full rounded-xl object-contain"
+                />
+              )}
 
             </>
           )}

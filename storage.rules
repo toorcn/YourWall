@@ -7,9 +7,10 @@ service firebase.storage {
       allow read: if true;
     }
 
-    match /message-images/{userId}/{fileName} {
+    match /message-images/{spaceCode}/{userId}/{fileName} {
       allow create: if request.auth != null
         && request.auth.uid == userId
+        && firestore.get(/databases/(default)/documents/spaces/$(spaceCode)).data.imagesEnabled == true
         && request.resource.size <= 5 * 1024 * 1024
         && request.resource.contentType.matches('image/(jpeg|png|gif|webp)');
 

@@ -11,6 +11,7 @@ export interface Message {
   authorUid?: string; // Anonymous Firebase Auth uid for newly created messages
   repostedFrom?: string; // ID of the original message being reposted
   repostComment?: string; // Optional comment added by the reposter
+  imageUrl?: string; // Firebase Storage URL for an optional attached image
   spaceCode: string; // Links message to space
 }
 
@@ -32,6 +33,7 @@ export interface Space {
     accent: string; // Accent color
   };
   popularGroups: string[]; // Custom popular groups for this space
+  imagesEnabled?: boolean; // Images are enabled only when this is explicitly true
   createdAt: Timestamp;
   createdBy?: string; // Optional creator identifier
   ownerUid?: string; // Anonymous Firebase Auth uid for newly created spaces
@@ -61,6 +63,7 @@ export interface MessageFormData {
   content: string;
   repostedFrom?: string; // ID of the original message being reposted
   repostComment?: string; // Optional comment added by the reposter
+  imageFile?: File; // Uploaded before the message is saved
 }
 
 export interface Reply {

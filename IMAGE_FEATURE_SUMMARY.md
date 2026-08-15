@@ -3,6 +3,17 @@
 ## Overview
 Added the ability to include images in messages with automatic compression, preview, and cloud storage.
 
+## Enable images for one space
+
+Image uploads are off by default and can be enabled per space in Firestore:
+
+1. Open the `spaces` collection in the Firebase Console.
+2. Open the document whose ID is the space code.
+3. Add an `imagesEnabled` field with type **boolean** and value `true`.
+4. Reload the space page.
+
+Set the field to `false` (or remove it) to hide and reject image uploads for that space.
+
 ## Changes Made
 
 ### 1. Type Definitions (`lib/types.ts`)
@@ -10,8 +21,8 @@ Added the ability to include images in messages with automatic compression, prev
 - Added `imageFile?: File` to the `MessageFormData` interface
 
 ### 2. Firebase Configuration (`lib/firebase.ts`)
-- Added Firebase Storage initialization
-- Exported `storage` instance for use throughout the app
+- Uses Firebase Anonymous Authentication before uploads and message writes
+- Exports the authenticated Storage instance for use throughout the app
 
 ### 3. Storage Utilities (`lib/storage.ts`) - NEW FILE
 - **`validateImageFile()`**: Validates file type and size (max 5MB)
@@ -79,19 +90,9 @@ Before using the image feature, you need to set up Firebase Storage:
    - Click "Get Started"
    - Choose your security rules (start in test mode for development)
 
-2. **Update Storage Rules** (for production):
-   ```
-   rules_version = '2';
-   service firebase.storage {
-     match /b/{bucket}/o {
-       match /message-images/{imageId} {
-         allow read: if true;  // Anyone can read
-         allow write: if request.resource.size < 20 * 1024 * 1024  // Max 20MB
-                      && request.resource.contentType.matches('image/.*');
-       }
-     }
-   }
-   ```
+2. Deploy the versioned `storage.rules` and `firestore.rules`. Uploads require
+   anonymous authentication, an owner-scoped path, an enabled space, an allowed
+   image MIME type, and a file no larger than 5MB.
 
 3. **Verify Storage Bucket** in `.env.local`:
    ```
@@ -143,8 +144,7 @@ To test the feature:
 
 ## Notes
 
-- Images are stored in the `message-images/` folder in Firebase Storage
+- Images are stored under `message-images/{spaceCode}/{userId}/` in Firebase Storage
 - File names are auto-generated with timestamp and random string
 - The feature gracefully handles errors (network issues, file too large, etc.)
 - All linter warnings are minor (stylistic preferences) and don't affect functionality
-

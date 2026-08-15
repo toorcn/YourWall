@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, CheckCircle, Sparkles, Heart, ArrowRight, User, MessageSquare, Share2 } from 'lucide-react';
+import { Send, CheckCircle, Sparkles, Heart, ArrowRight, User, MessageSquare, Share2, ImagePlus, X } from 'lucide-react';
 import NextImage from 'next/image';
 import { addMessage } from '@/lib/firestore';
+import { validateImageFile } from '@/lib/storage';
 import { MessageFormData } from '@/lib/types';
 import RecipientSelector from './RecipientSelector';
 
@@ -14,9 +15,10 @@ const MIN_CHARACTERS = 10;
 interface MessageComposerProps {
   availableGroups: string[];
   spaceCode: string;
+  imagesEnabled?: boolean;
 }
 
-export default function MessageComposer({ availableGroups, spaceCode }: MessageComposerProps) {
+export default function MessageComposer({ availableGroups, spaceCode, imagesEnabled = false }: MessageComposerProps) {
   const [formData, setFormData] = useState<MessageFormData>({
     from: '',
     to: [],
@@ -24,9 +26,13 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1); // Start at step 1
   const [step1Skipped, setStep1Skipped] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const stepRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
   // Auto-reveal next step when current step is completed
@@ -56,6 +62,35 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
     }
   }, [currentStep]);
 
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
+  const clearImage = () => {
+    setFormData((current) => ({ ...current, imageFile: undefined }));
+    setImagePreview(null);
+    setImageError(null);
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      clearImage();
+      setImageError(validation.error || 'Please choose a valid image.');
+      return;
+    }
+
+    setFormData((current) => ({ ...current, imageFile: file }));
+    setImagePreview(URL.createObjectURL(file));
+    setImageError(validation.warning || null);
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +100,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
     }
 
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       await addMessage(formData, spaceCode);
 
@@ -76,6 +112,9 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
       }
 
       setFormData({ from: '', to: [], content: '' });
+      setImagePreview(null);
+      setImageError(null);
+      if (imageInputRef.current) imageInputRef.current.value = '';
       setShowSuccess(true);
       setCurrentStep(1);
       setStep1Skipped(false);
@@ -84,7 +123,7 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
       }, 4000);
     } catch (error) {
       console.error('Error sending message:', error);
-      // Error handling could be added here with a toast notification
+      setSubmitError(error instanceof Error ? error.message : 'Failed to send your message. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -220,11 +259,64 @@ export default function MessageComposer({ availableGroups, spaceCode }: MessageC
                         {charactersRemaining} remaining
                       </div>
                     </div>
+
+                    {imagesEnabled && (
+                      <div className="pt-2">
+                        <input
+                          ref={imageInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/gif,image/webp"
+                          onChange={handleImageChange}
+                          className="sr-only"
+                          id={`message-image-${spaceCode}`}
+                        />
+
+                        {imagePreview ? (
+                          <div className="relative overflow-hidden rounded-xl border-2 border-surface-200 bg-surface-50">
+                            <NextImage
+                              src={imagePreview}
+                              alt="Selected image preview"
+                              width={1200}
+                              height={800}
+                              unoptimized
+                              className="max-h-80 w-full object-contain"
+                            />
+                            <button
+                              type="button"
+                              onClick={clearImage}
+                              className="absolute right-3 top-3 rounded-full bg-black/65 p-2 text-white transition-colors hover:bg-black/80"
+                              aria-label="Remove selected image"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <label
+                            htmlFor={`message-image-${spaceCode}`}
+                            className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-surface-300 bg-surface-50/60 px-5 py-4 text-sm font-medium text-brand-900/75 transition-colors hover:border-brand-400 hover:bg-brand-50/50"
+                          >
+                            <ImagePlus className="h-5 w-5 text-brand-600" />
+                            Add an image (optional, max 5MB)
+                          </label>
+                        )}
+
+                        {imageError && (
+                          <p className="mt-2 text-sm text-accent-500" role="alert">
+                            {imageError}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
 
               {/* Submit Button */}
+              {submitError && (
+                <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+                  {submitError}
+                </p>
+              )}
               <AnimatePresence>
                 {currentStep >= 3 && (
                   <motion.button

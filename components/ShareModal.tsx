@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download } from 'lucide-react';
 import { Message } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 
 interface ShareModalProps {
   message: Message | null;
@@ -157,77 +157,6 @@ export default function ShareModal({ message, isOpen, onClose, spaceTitle }: Sha
           imageTimeout: 0, // Don't timeout
           removeContainer: true,
           foreignObjectRendering: false, // Disable foreign object for better compatibility
-          onclone: (clonedDoc) => {
-            // Remove all external stylesheets that might contain oklab
-            const linkTags = clonedDoc.querySelectorAll('link[rel="stylesheet"]');
-            linkTags.forEach((tag) => tag.remove());
-
-            // Remove style tags with oklab
-            const styleTags = clonedDoc.querySelectorAll('style');
-            styleTags.forEach((tag) => {
-              if (tag.textContent && tag.textContent.includes('oklab')) {
-                tag.remove();
-              }
-            });
-
-            // Remove backdrop-filter which can cause issues
-            const allElements = clonedDoc.querySelectorAll('*');
-            allElements.forEach((el) => {
-              const htmlEl = el as HTMLElement;
-              if (htmlEl.style.backdropFilter) {
-                htmlEl.style.backdropFilter = 'none';
-              }
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              if ((htmlEl.style as any).webkitBackdropFilter) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (htmlEl.style as any).webkitBackdropFilter = 'none';
-              }
-            });
-
-            // Remove white overlay divs that create yellow hue
-            // Find all divs with white/transparent backgrounds
-            const allDivs = clonedDoc.querySelectorAll('div');
-            allDivs.forEach((div) => {
-              const htmlDiv = div as HTMLElement;
-              const inlineBg = htmlDiv.style.backgroundColor || '';
-              const classes = htmlDiv.classList.toString();
-
-              // Check if it's an overlay (positioned absolutely with inset-0 or has white bg)
-              const isOverlay = classes.includes('inset-0') ||
-                htmlDiv.style.position === 'absolute' ||
-                htmlDiv.style.position === 'fixed';
-
-              // Remove white overlays with opacity that create yellow tint
-              if (inlineBg.includes('rgba(255, 255, 255') ||
-                inlineBg.includes('rgb(255, 255, 255')) {
-                if (isOverlay) {
-                  // Remove the overlay completely
-                  htmlDiv.style.display = 'none';
-                } else {
-                  // For non-overlay divs, make background fully transparent
-                  htmlDiv.style.backgroundColor = 'transparent';
-                }
-              }
-
-              // Also check for any white rgba backgrounds (with any opacity)
-              if (inlineBg.includes('rgba') && inlineBg.includes('255') && inlineBg.includes('255')) {
-                if (isOverlay) {
-                  htmlDiv.style.display = 'none';
-                } else {
-                  htmlDiv.style.backgroundColor = 'transparent';
-                }
-              }
-            });
-
-            // Ensure images have no background color tint
-            const images = clonedDoc.querySelectorAll('img');
-            images.forEach((img) => {
-              const htmlImg = img as HTMLImageElement;
-              htmlImg.style.backgroundColor = 'transparent';
-              // Remove any filters that might add color cast
-              htmlImg.style.filter = 'none';
-            });
-          },
         });
         console.log('Canvas created successfully');
       } catch (canvasError) {
@@ -421,6 +350,15 @@ export default function ShareModal({ message, isOpen, onClose, spaceTitle }: Sha
                       &ldquo;{message.content}&rdquo;
                     </p>
 
+                    {message.imageUrl && (
+                      <img
+                        src={message.imageUrl}
+                        alt="Image attached to this message"
+                        crossOrigin="anonymous"
+                        className="max-h-[45vh] w-full rounded-2xl object-contain"
+                      />
+                    )}
+
                   </div>
                 </div>
 
@@ -472,4 +410,3 @@ export default function ShareModal({ message, isOpen, onClose, spaceTitle }: Sha
     </AnimatePresence>
   );
 }
-

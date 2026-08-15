@@ -59,7 +59,7 @@ service cloud.firestore {
         ])
         && request.resource.data.keys().hasOnly([
           'title', 'description', 'colors', 'popularGroups', 'createdAt',
-          'ownerUid', 'stats'
+          'imagesEnabled', 'ownerUid', 'stats'
         ])
         && validShortText(request.resource.data.title, 1, 100)
         && validOptionalText(request.resource.data, 'description', 500)
@@ -70,6 +70,10 @@ service cloud.firestore {
         && validHexColor(request.resource.data.colors.secondary)
         && validHexColor(request.resource.data.colors.accent)
         && validStringList(request.resource.data.popularGroups, 12, 60)
+        && (
+          !('imagesEnabled' in request.resource.data)
+          || request.resource.data.imagesEnabled == false
+        )
         && request.resource.data.createdAt == request.time
         && request.resource.data.ownerUid == request.auth.uid
         && validInitialStats(request.resource.data.stats);
@@ -102,7 +106,7 @@ service cloud.firestore {
         ])
         && request.resource.data.keys().hasOnly([
           'from', 'to', 'content', 'timestamp', 'color', 'likes',
-          'spaceCode', 'authorUid', 'repostedFrom', 'repostComment'
+          'spaceCode', 'authorUid', 'repostedFrom', 'repostComment', 'imageUrl'
         ])
         && validShortText(request.resource.data.from, 1, 80)
         && validStringList(request.resource.data.to, 10, 80)
@@ -114,6 +118,14 @@ service cloud.firestore {
         && request.resource.data.authorUid == request.auth.uid
         && request.resource.data.timestamp == request.time
         && validOptionalText(request.resource.data, 'repostComment', 200)
+        && validOptionalText(request.resource.data, 'imageUrl', 2048)
+        && (
+          !('imageUrl' in request.resource.data)
+          || (
+            get(/databases/$(database)/documents/spaces/$(request.resource.data.spaceCode)).data.imagesEnabled == true
+            && request.resource.data.imageUrl.matches('https://firebasestorage[.]googleapis[.]com/.*')
+          )
+        )
         && validRepost(request.resource.data);
 
       allow update: if signedIn()

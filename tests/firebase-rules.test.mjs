@@ -43,6 +43,7 @@ const validSpace = (uid = 'alice') => ({
     accent: '#a855f7',
   },
   popularGroups: ['General', 'Shoutouts', 'Q&A'],
+  imagesEnabled: false,
   createdAt: serverTimestamp(),
   ownerUid: uid,
   stats: {
@@ -116,6 +117,8 @@ describe('Cloud Firestore rules', () => {
 
     await assertFails(setDoc(doc(guestDb, 'spaces', 'guest'), validSpace('guest')));
     await assertSucceeds(setDoc(doc(aliceDb, 'spaces', 'alicewall'), validSpace('alice')));
+    const { imagesEnabled: _, ...legacySpace } = validSpace('alice');
+    await assertSucceeds(setDoc(doc(aliceDb, 'spaces', 'legacywall'), legacySpace));
     await assertFails(setDoc(doc(aliceDb, 'spaces', 'wrongowner'), validSpace('mallory')));
     await assertFails(setDoc(doc(aliceDb, 'spaces', 'bad-extra'), {
       ...validSpace('alice'),
@@ -143,6 +146,34 @@ describe('Cloud Firestore rules', () => {
       authorUid: 'alice',
     }));
     await assertFails(updateDoc(replyRef, { content: 'Changed later' }));
+  });
+
+  test('image messages require images to be enabled for the space', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, 'spaces', 'imageson'), {
+        ...validSpace(),
+        imagesEnabled: true,
+      });
+    });
+
+    const aliceDb = testEnv.authenticatedContext('alice').firestore();
+    const imageUrl = 'https://firebasestorage.googleapis.com/v0/b/demo/o/message.png';
+
+    await assertSucceeds(setDoc(doc(aliceDb, 'messages', 'image-message'), {
+      ...validMessage('alice'),
+      spaceCode: 'imageson',
+      imageUrl,
+    }));
+    await assertFails(setDoc(doc(aliceDb, 'messages', 'disabled-image-message'), {
+      ...validMessage('alice'),
+      imageUrl,
+    }));
+    await assertFails(setDoc(doc(aliceDb, 'messages', 'external-image-message'), {
+      ...validMessage('alice'),
+      spaceCode: 'imageson',
+      imageUrl: 'https://example.com/image.png',
+    }));
   });
 
   test('likes require one matching per-user document in an atomic transaction', async () => {
@@ -193,28 +224,42 @@ describe('Cloud Firestore rules', () => {
 
 describe('Cloud Storage rules', () => {
   test('images are public, but only authenticated users can upload to their uid path', async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, 'spaces', 'imageson'), {
+        ...validSpace(),
+        imagesEnabled: true,
+      });
+      await setDoc(doc(db, 'spaces', 'imagesoff'), validSpace());
+    });
+
     const bytes = new Uint8Array([137, 80, 78, 71]);
     const aliceStorage = testEnv.authenticatedContext('alice').storage();
     const guestStorage = testEnv.unauthenticatedContext().storage();
 
-    const imageRef = ref(aliceStorage, 'message-images/alice/photo.png');
+    const imageRef = ref(aliceStorage, 'message-images/imageson/alice/photo.png');
     await assertSucceeds(uploadBytes(imageRef, bytes, { contentType: 'image/png' }));
-    await assertSucceeds(getBytes(ref(guestStorage, 'message-images/alice/photo.png')));
+    await assertSucceeds(getBytes(ref(guestStorage, 'message-images/imageson/alice/photo.png')));
 
     await assertFails(uploadBytes(
-      ref(guestStorage, 'message-images/guest/photo.png'),
+      ref(guestStorage, 'message-images/imageson/guest/photo.png'),
       bytes,
       { contentType: 'image/png' },
     ));
     await assertFails(uploadBytes(
-      ref(aliceStorage, 'message-images/mallory/photo.png'),
+      ref(aliceStorage, 'message-images/imageson/mallory/photo.png'),
       bytes,
       { contentType: 'image/png' },
     ));
     await assertFails(uploadBytes(
-      ref(aliceStorage, 'message-images/alice/file.svg'),
+      ref(aliceStorage, 'message-images/imageson/alice/file.svg'),
       bytes,
       { contentType: 'image/svg+xml' },
+    ));
+    await assertFails(uploadBytes(
+      ref(aliceStorage, 'message-images/imagesoff/alice/photo.png'),
+      bytes,
+      { contentType: 'image/png' },
     ));
   });
 });

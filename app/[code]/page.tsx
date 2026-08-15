@@ -24,6 +24,7 @@ export default function SpacePage() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [selectedSort, setSelectedSort] = useState('newest');
   const [isLoading, setIsLoading] = useState(true);
+  const [messagesError, setMessagesError] = useState<string | null>(null);
   const [isLoadingSpace, setIsLoadingSpace] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -121,9 +122,14 @@ export default function SpacePage() {
       spaceCode,
       (newMessages) => {
         setAllMessages(newMessages);
+        setMessagesError(null);
         setIsLoading(false);
       },
-      undefined // No filter - get all messages
+      undefined, // No filter - get all messages
+      () => {
+        setMessagesError('Messages could not be loaded. Please refresh and try again.');
+        setIsLoading(false);
+      }
     );
 
     return () => {
@@ -404,6 +410,7 @@ export default function SpacePage() {
           <MessageComposer
             availableGroups={availableGroups}
             spaceCode={spaceCode}
+            imagesEnabled={space.imagesEnabled === true}
           />
         </motion.div>
 
@@ -482,6 +489,10 @@ export default function SpacePage() {
               style={{ borderColor: primaryColor, borderTopColor: 'transparent' }}
             />
             <p className="mt-4 text-brand-900/80">Loading messages...</p>
+          </div>
+        ) : messagesError ? (
+          <div className="text-center py-12 px-6" role="alert">
+            <p className="text-red-700 font-medium">{messagesError}</p>
           </div>
         ) : filteredMessages.length === 0 ? (
           <motion.div
